@@ -14,15 +14,13 @@ contract Vote {
 
     Voter[] voters;
 
-
-
-    function recieve(bool _userVote) public payable {
+    function recieve(bool _userVote) external payable {
         require(msg.value==0.0001 ether,"Send 0.0001 ether");
         require(canVote == true, "Voting has ended");
-        Voter memory voter;
-        voter.voterAddr = msg.sender;
-        voter.vote = _userVote;
-        voters.push(voter); 
+        Voter memory voterReadOnly;
+        voterReadOnly.voterAddr = msg.sender;
+        voterReadOnly.vote = _userVote;
+        voters.push(voterReadOnly); 
         if(_userVote){
             YesVotes++;
         }else{
@@ -30,7 +28,7 @@ contract Vote {
         }
     }
 
-    function voteFinalization() public {
+    function voteFinalization() external {
         require(canVote == true, "Voting has ended");
         canVote = false;
         /*
@@ -39,7 +37,7 @@ contract Vote {
         }*/
     }
 
-    function getTotalDeposit() view public returns(uint) {
+    function getTotalDeposit() view external returns(uint) {
         return address(this).balance;
     }
 }
