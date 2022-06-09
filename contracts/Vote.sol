@@ -1,8 +1,8 @@
 pragma solidity ^0.5.3;
 
 contract Vote {
-    
-    string public value;
+
+    //Variables & init
     uint16 public YesVotes;
     uint16 public NoVotes;
     bool public canVote;
@@ -13,25 +13,25 @@ contract Vote {
         canVote = true;
     }
 
+    //Voter Storage
     struct Voter{
-        address voterAddr;
+        bool voted;
         bool vote;
     }
 
-    mapping(address => bool) voterVoted;
-
-    Voter[] voters;
-
-    function recieve(bool _userVote) external payable {
+    mapping(address =>Voter) voters;
+    
+    //Main Vote Function
+    function voteProposal(bool _userVote) external payable {
         require(msg.value==0.0001 ether,"Send 0.0001 ether");
         require(canVote == true, "Voting has ended");
-        require(voterVoted[msg.sender] == false);
+        require(voters[msg.sender].voted == false);
 
         Voter memory voterReadOnly;
-        voterReadOnly.voterAddr = msg.sender;
+        voterReadOnly.voted = true;
         voterReadOnly.vote = _userVote;
-        voters.push(voterReadOnly); 
-        voterVoted[msg.sender] = true;
+        voters[msg.sender] = voterReadOnly;
+
         if(_userVote){
             YesVotes++;
         }else{
@@ -69,6 +69,7 @@ contract Vote {
     }
     */
 
+    //Get contract balance
     function getTotalDeposit() view external returns(uint256) {
         return address(this).balance;
     }
