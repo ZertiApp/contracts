@@ -12,7 +12,7 @@ contract VoteFactory is ProxyFactory {
     impl = _impl;
   }
 
-  function cloneStore() public {
+  function cloneVote() public {
     deployMinimal(impl, "");
   }
 }

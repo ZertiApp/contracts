@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@openzeppelin/upgrades": "^2.8.0"
+    "@openzeppelin/upgrades": "^2.8.0",
+    "ganache-cli": "^6.12.2"
   }
 }
