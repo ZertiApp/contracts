@@ -1,4 +1,5 @@
-pragma solidity ^0.5.3;
+//SPDX-License-Identifier: MIT
+pragma solidity >=0.5.3;
 
 contract Vote {
 
@@ -8,7 +9,9 @@ contract Vote {
     bool public canVote;
     address public impl;
 
-    constructor() internal{
+    address payable[] winners;
+
+    constructor() public {
         impl = msg.sender;
         canVote = true;
     }
@@ -20,6 +23,8 @@ contract Vote {
     }
 
     mapping(address =>Voter) voters;
+
+    address[] votersKeys;
     
     //Main Vote Function
     function voteProposal(bool _userVote) external payable {
@@ -37,24 +42,34 @@ contract Vote {
         }else{
             NoVotes++;
         }
+
+        votersKeys.push(msg.sender);
+
     }
 
-    /*
+    //send ether
+    function sendEther(address payable _recipient, uint _amount) external {
+        _recipient.transfer(_amount);
+    }
+
+    //Distrib Pool function
     function distributePool(bool _result) external {
         require(msg.sender == address(this));
         require(canVote == false);
 
-        uint16 voteWinners;
-
-        for(uint i = 0; i <voters.length;i++){
-            if(voters[i].vote == _result){
-                voteWinners++;
+        for(uint i = 0; i <votersKeys.length;i++){
+            if(voters[votersKeys[i]].vote == _result){
+                address payable voteWinner = payable(address(votersKeys[i]));
+                winners.push(voteWinner);
             }
         }
 
-        //uint percentajePerWinner = address(this).balance / voteWinners;
+        uint percentajePerWinner = address(this).balance / winners.length; //.sol no maneja floating points, revisar eso
+
+        for(uint i = 0 ; i < winners.length; i++){
+            winners[i].transfer(percentajePerWinner);
+        }
     }
-    */
 
     /*
     function voteFinalization() external {
