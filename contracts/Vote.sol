@@ -9,19 +9,12 @@ contract Vote {
     bool public canVote;
     address public impl;
 
-    address payable[] winners;
-
     constructor() public {
         impl = msg.sender;
         canVote = true;
     }
 
     //Voter Storage
-    struct Voter{
-        bool voted;
-        bool vote;
-    }
-
     mapping(address =>Voter) voters;
 
     address[] votersKeys;
@@ -30,11 +23,12 @@ contract Vote {
     function voteProposal(bool _userVote) external payable {
         require(msg.value==0.0001 ether,"Send 0.0001 ether");
         require(canVote == true, "Voting has ended");
-        require(voters[msg.sender].voted == false);
+        require(voters[msg.sender][0]== false);
 
-        Voter memory voterReadOnly;
-        voterReadOnly.voted = true;
-        voterReadOnly.vote = _userVote;
+        bool[2] memory voterReadOnly;
+        voterReadOnly[0]= true;
+        voterReadOnly[1] = _userVote;
+
         voters[msg.sender] = voterReadOnly;
 
         if(_userVote){
@@ -52,22 +46,26 @@ contract Vote {
         _recipient.transfer(_amount);
     }
 
+
+    uint[] winners;
+
     //Distrib Pool function
     function distributePool(bool _result) external {
         require(msg.sender == address(this));
         require(canVote == false);
 
         for(uint i = 0; i <votersKeys.length;i++){
-            if(voters[votersKeys[i]].vote == _result){
-                address payable voteWinner = payable(address(votersKeys[i]));
-                winners.push(voteWinner);
+            if(voters[votersKeys[i]][1] == _result){
+                //address payable voteWinner = payable(address(votersKeys[i]));
+                winners.push(i);
             }
         }
 
-        uint percentajePerWinner = address(this).balance / winners.length; //.sol no maneja floating points, revisar eso
+        uint percentajePerWinner = address(this).balance / winners.lengh; //.sol no maneja floating points, revisar eso
 
         for(uint i = 0 ; i < winners.length; i++){
-            winners[i].transfer(percentajePerWinner);
+            address payable voteWinner = payable(address(votersKeys[winners[i]]));
+            voteWinner.transfer(percentajePerWinner);
         }
     }
 
