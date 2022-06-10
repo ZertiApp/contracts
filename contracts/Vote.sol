@@ -15,7 +15,7 @@ contract Vote {
     }
 
     //Voter Storage
-    mapping(address =>Voter) voters;
+    mapping(address => bool[2]) voters; // [0]= Voted? [1] = Vote
 
     address[] votersKeys;
     
