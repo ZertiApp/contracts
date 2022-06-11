@@ -1,19 +1,21 @@
 //SPDX-License-Identifier: MIT
-pragma solidity >=0.5.3;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/upgrades/contracts/upgradeability/ProxyFactory.sol";
 import "./Vote.sol";
 
-contract VoteFactory is ProxyFactory {
+contract VoteFactory {
   address public owner;
   address public impl;
 
-  constructor (address _impl) public {
+  constructor (address _impl) {
     owner = msg.sender;
     impl = _impl;
   }
 
+  /*
   function cloneVote() public {
     deployMinimal(impl, "");
   }
+  */
+
 }
