@@ -1,89 +1,95 @@
 //SPDX-License-Identifier: MIT
-pragma solidity >=0.5.3;
+pragma solidity ^0.8.0;
 
 contract Vote {
-
     //Variables & init
-    uint16 public YesVotes;
-    uint16 public NoVotes;
     bool public canVote;
     address public impl;
 
-    constructor() public {
+    constructor() {
         impl = msg.sender;
         canVote = true;
     }
 
-    //Voter Storage
-    mapping(address => bool[2]) voters; // [0]= Voted? [1] = Vote
-
-    address[] votersKeys;
+    /**
+     * @dev  Voter info storage
+     *
+     * voted: O(1) check to know if user already voted
+     *
+     * voters: Use of heap-like structure to subdivide voters based on vote for 
+     * easier processing at distributePool()
+     *
+     */
+    mapping(address => bool) internal voted; // Voted? 
+    mapping(uint8 => address[]) internal voters;
     
-    //Main Vote Function
-    function voteProposal(bool _userVote) external payable {
+    /**
+     * @dev  Main receiveVote function
+     *
+     * Receives ether and stores user vote and address in heap-like structure
+     * Sets "Voted[user]" to True 
+     *
+     * Reward System: Generates a pool of eth for later distribution between winners(majority)
+     *
+     */
+    function receiveVote(uint8 _userVote) external payable {
         require(msg.value==0.0001 ether,"Send 0.0001 ether");
         require(canVote == true, "Voting has ended");
-        require(voters[msg.sender][0]== false);
+        require(voted[msg.sender] == false);
 
-        bool[2] memory voterReadOnly;
-        voterReadOnly[0]= true;
-        voterReadOnly[1] = _userVote;
+        voted[msg.sender] = true;
 
-        voters[msg.sender] = voterReadOnly;
-
-        if(_userVote){
-            YesVotes++;
+        if(_userVote == 1){
+            voters[1].push(msg.sender);
         }else{
-            NoVotes++;
-        }
-
-        votersKeys.push(msg.sender);
-
-    }
-
-    //send ether
-    function sendEther(address payable _recipient, uint _amount) external {
-        _recipient.transfer(_amount);
-    }
-
-
-    uint[] winners;
-
-    //Distrib Pool function
-    function distributePool(bool _result) external {
-        require(msg.sender == address(this));
-        require(canVote == false);
-
-        for(uint i = 0; i <votersKeys.length;i++){
-            if(voters[votersKeys[i]][1] == _result){
-                //address payable voteWinner = payable(address(votersKeys[i]));
-                winners.push(i);
-            }
-        }
-
-        uint percentajePerWinner = address(this).balance / winners.lengh; //.sol no maneja floating points, revisar eso
-
-        for(uint i = 0 ; i < winners.length; i++){
-            address payable voteWinner = payable(address(votersKeys[winners[i]]));
-            voteWinner.transfer(percentajePerWinner);
+            voters[0].push(msg.sender);
         }
     }
 
-    /*
-    function voteFinalization() external {
-        require(msg.sender == address(this));
+    /**
+     * @dev  pool distribution function
+     *
+     * distributes reward system pool between winners(majority)
+     *
+     */
+    function distributePool(uint8 _result,uint256 percentajePerWinner) internal {
+        require(canVote == false,"Voting has ended");
+        require(voters[_result].length > 0,"No votes registered"); // To avoid division by 0; if no one voted, contract balance is also 0. kill two birds with one stone.
+
+        for(uint i = 0 ; i < voters[_result].length;) {
+            payable(voters[_result][i]).transfer(percentajePerWinner);
+            unchecked{ i++; } //Save gas avoiding overflow check, i is already limited to < voters[_result].length
+        }
+    }    
+
+    /**
+     * @dev  Vote finalization function
+     *
+     * Sets vote result and calls distributeVotePool() function
+     *
+     */
+    function voteFinalization() internal {
+        //TIME LOCK FUNCTION
+        //MAKE THIS ONLY CALLABLE BY CONTRACT
         require(canVote == true, "Voting has ended");
 
-        //canVote = false;
-        
-        if(YesVotes>NoVotes){
-
+        canVote = false;
+        uint percentajePerWinner;
+        if(voters[1].length > voters[0].length ) {
+            percentajePerWinner = address(this).balance / voters[0].length;
+            distributePool(1,percentajePerWinner);
+        }else if (voters[1].length < voters[0].length ){
+            percentajePerWinner = address(this).balance / voters[1].length;
+            distributePool(0,percentajePerWinner);
+        }else{
+            percentajePerWinner = address(this).balance / voters[0].length + voters[1].length;
+            distributePool(0,percentajePerWinner);
+            distributePool(1,percentajePerWinner);
         }
     }
-    */
 
     //Get contract balance
-    function getTotalDeposit() view external returns(uint256) {
+    function getTotalDeposit() external view returns(uint256) {
         return address(this).balance;
     }
 
