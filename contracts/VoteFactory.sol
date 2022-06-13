@@ -14,12 +14,12 @@ contract VoteFactory is MinimalProxy {
     impl = _impl;
   }
 
-  modifier onlyOwner(){
+  modifier onlyOwner() {
     require(msg.sender == adm,"Access denied");
     _;
   }
 
-  function changeImpl(address _newImpl) public onlyOwner{
+  function changeImpl(address _newImpl) public onlyOwner {
     impl = _newImpl;
   }
 
