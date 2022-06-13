@@ -27,10 +27,14 @@ contract Vote {
      * @dev  Events
      *
      */
-     event UserVoted(
+    event UserVoted(
         address indexed userAddr,
         uint8 vote
      );
+    event PaymentReleased(
+        address to,
+        uint256 amount
+         );
     
     /**
      * @dev  Main receiveVote function
@@ -63,12 +67,13 @@ contract Vote {
      * distributes reward system pool between winners(majority)
      *
      */
-    function distributePool(uint8 _result, uint256  _percentajePerWinner) internal {
+    function distributePool(uint8 _result, uint256  _amount) internal {
         require(canVote == false,"Voting has ended");
         require(voters[_result].length > 0,"No votes registered"); // To avoid division by 0; if no one voted, contract balance is also 0. kill two birds with one stone.
-        assert(address(this).balance >= _percentajePerWinner);
+        assert(address(this).balance >= _amount);
         for(uint i = 0 ; i < voters[_result].length;) {
-            payable(voters[_result][i]).transfer(_percentajePerWinner);
+            payable(voters[_result][i]).transfer(_amount);
+            emit PaymentReleased(voters[_result][i], _amount);
             unchecked{ i++; } //Save gas avoiding overflow check, i is already limited to < voters[_result].length
         }
     }    
