@@ -1,4 +1,10 @@
 //SPDX-License-Identifier: MIT
+
+/** 
+ * @title Vote contract
+ * @author Lucas Grasso Ramos
+ * @notice Vote contract used for entity verification
+*/
 pragma solidity ^0.8.0;
 
 contract Vote {
@@ -22,7 +28,7 @@ contract Vote {
      */
     mapping(address => bool) internal voted; // Voted? 
     mapping(uint8 => address[]) internal voters; // 1 - In favor vote; 0 - Opposing vote
-    
+
     /**
      * @dev  Events
      *
@@ -49,8 +55,11 @@ contract Vote {
      *
      * Reward System: Generates a pool of eth for later distribution between winners(majority)
      *
+     *  @param _userVote users vote. 1 - In favor vote; 0 - Opposing vote
      */
-    function receiveVote(uint8 _userVote) external payable {
+    function receiveVote(
+        uint8 _userVote
+        ) external payable {
         require (msg.value==votingCost,"Send 0.0001 ether");
         require (canVote == true, "Voting has ended");
         require (voted[msg.sender] == false,"User already voted");
@@ -71,8 +80,13 @@ contract Vote {
      *
      * distributes reward system pool between winners(majority)
      *
+     * @param _result proposition with the most votes.  1 - In favor vote; 0 - Opposing vote
+     * @param _amount percentaje per voter to be distributed
      */ 
-    function distributePool(uint8 _result, uint256  _amount) internal {
+    function distributePool(
+        uint8 _result, 
+        uint256  _amount
+        ) internal {      
         require (canVote == false,"Voting has ended");
         assert (address(this).balance >= _amount);
         for(uint i = 0 ; i < voters[_result].length;) {
@@ -100,18 +114,18 @@ contract Vote {
 
         if (voters[1].length > voters[0].length ) {
             emit VoteFinished(1);
-            unchecked{
+            unchecked {
                 distributePool(1,address(this).balance / voters[1].length);
             }
         } else if (voters[1].length < voters[0].length ) {
             emit VoteFinished(0);
-            unchecked{
+            unchecked {
                 distributePool(0,address(this).balance / voters[0].length);
             }
         } else {
             uint256 percentajePerWinner;
             emit VoteFinished(2);
-            unchecked{
+            unchecked {
                 percentajePerWinner = address(this).balance / voters[0].length + voters[1].length;
             }
             distributePool(0,percentajePerWinner);
@@ -133,19 +147,32 @@ contract Vote {
      *
      */ 
 
-    //Get contract balance
+    /** 
+     * @dev Get contract balance
+     * @return uint256 with the balance of the contract
+     */
     function getTotalDeposit() external view returns(uint256) {
         return address(this).balance;
     }
-    //Check if you can vote
+    /** 
+     * @dev Check if you can vote
+     * @return bool stating if voting is still available
+     */
     function getCanVote() external view returns(bool) {
         return canVote;
     }
-    //Check if user voted
+    /**
+     * @dev check if address has already voted
+     * @param _addr address to check
+     * @return bool stating if selected address has already voted
+     */
     function getUserVoted(address  _addr) external view returns(bool) {
         return voted[_addr];
     }
-    //GetVoteCost
+     /**
+     * @dev get voting cost
+     * @return uint256 of the neccesary money to stake/vote
+     */
     function getVoteCost() external view returns(uint256) {
         return votingCost;
     }
