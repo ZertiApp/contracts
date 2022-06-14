@@ -9,11 +9,9 @@ pragma solidity ^0.8.0;
 
 contract Vote {
     //Variables & init
-    bool internal canVote;
-    uint256 internal votingCost;
+    uint256 internal votingCost; //IF votingCost == 0, voting is Closed, avoid using 1 word of storage
 
     constructor() {
-        canVote = true;
         votingCost = 0.0001 ether;
     }
 
@@ -61,7 +59,7 @@ contract Vote {
         uint8 _userVote
         ) external payable {
         require (msg.value==votingCost,"Send 0.0001 ether");
-        require (canVote == true, "Voting has ended");
+        require (votingCost > 0, "Voting has ended");
         require (voted[msg.sender] == false,"User already voted");
 
         voted[msg.sender] = true;
@@ -87,7 +85,7 @@ contract Vote {
         uint8 _result, 
         uint256  _amount
         ) internal {      
-        require (canVote == false,"Voting has ended");
+        require (votingCost > 0, "Voting has ended");
         assert (address(this).balance >= _amount);
         for(uint i = 0 ; i < voters[_result].length;) {
             payable(voters[_result][i]).transfer(_amount);
@@ -104,9 +102,9 @@ contract Vote {
      */
     function voteFinalization() internal {
         //TIME LOCK FUNCTION
-        require (canVote == true, "Voting has ended");
+        require (votingCost > 0, "Voting has ended");
 
-        canVote = false;
+        votingCost == 0;
 
         if (voters[0].length > 0 && voters[1].length > 0){
             return;
@@ -154,13 +152,7 @@ contract Vote {
     function getTotalDeposit() external view returns(uint256) {
         return address(this).balance;
     }
-    /** 
-     * @dev Check if you can vote
-     * @return bool stating if voting is still available
-     */
-    function getCanVote() external view returns(bool) {
-        return canVote;
-    }
+
     /**
      * @dev check if address has already voted
      * @param _addr address to check
@@ -170,7 +162,7 @@ contract Vote {
         return voted[_addr];
     }
      /**
-     * @dev get voting cost
+     * @dev get voting cost, if 0, voting closed
      * @return uint256 of the neccesary money to stake/vote
      */
     function getVoteCost() external view returns(uint256) {
