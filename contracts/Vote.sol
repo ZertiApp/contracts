@@ -42,8 +42,8 @@ contract Vote {
     );
 
     event VoteFinished(
-        uint8 result
-    );
+        uint8 result            
+    ); 
     
     /**
      * @dev  Main receiveVote function
@@ -53,7 +53,7 @@ contract Vote {
      *
      * Reward System: Generates a pool of eth for later distribution between winners(majority)
      *
-     *  @param _userVote users vote. 1 - In favor vote; 0 - Opposing vote
+     *  @param _userVote users vote obtained in front-end. 1 - In favor vote; 0 - Opposing vote
      */
     function receiveVote(
         uint8 _userVote
@@ -106,7 +106,7 @@ contract Vote {
 
         votingCost == 0;
 
-        if (voters[0].length > 0 && voters[1].length > 0){
+        if (voters[0].length > 0 && voters[1].length > 0){ //Voters 1 > Voters 0
             return;
         }
 
@@ -115,12 +115,15 @@ contract Vote {
             unchecked {
                 distributePool(1,address(this).balance / voters[1].length);
             }
-        } else if (voters[1].length < voters[0].length ) {
+        } else if (voters[1].length < voters[0].length ) { //Voters 0 > Voters 1
             emit VoteFinished(0);
             unchecked {
                 distributePool(0,address(this).balance / voters[0].length);
             }
-        } else {
+        } else { //Voters 0 = Voters 1 
+            if(voters[0].length == 0){  //Only perform one check, given that Voters 0 = Voters 1 
+                revert("No voters registered");
+            }
             uint256 percentajePerWinner;
             emit VoteFinished(2);
             unchecked {
