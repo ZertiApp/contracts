@@ -1,5 +1,7 @@
 //SPDX-License-Identifier: MIT
 
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 /** 
  * @title Vote contract
  * @author Lucas Grasso Ramos
@@ -7,12 +9,22 @@
 */
 pragma solidity ^0.8.0;
 
-contract Vote {
+contract Vote is Initializable {
     //Variables & init
-    uint256 internal votingCost; //IF votingCost == 0, voting is Closed, avoid using 1 word of storage
+    uint256 internal votingCost; //IF votingCost == 0, voting is Closed, avoids using 1 word of storage
+    uint256 public startTime;
+    uint256 public endTime;
+    address public sender;
 
-    constructor() {
-        votingCost = 0.0001 ether;
+    function initialize(
+        uint256 _votingCost,
+        uint256 _timeToVote,
+        address _sender
+    ) external initializer {
+        votingCost = _votingCost;
+        startTime = block.timestamp;
+        endTime = startTime + _timeToVote * 1 days;
+        sender = _sender;
     }
 
     /** 
@@ -21,7 +33,7 @@ contract Vote {
      * voted: O(1) check to know if user already voted
      *
      * voters: Use of tree structure to subdivide voters based on vote for 
-     * easier processing at distributePool()
+     * easier processing at distributePool() function
      *
      */
     mapping(address => bool) internal voted; // Voted? 
@@ -36,14 +48,17 @@ contract Vote {
         uint8 vote
     );
     
-    event PaymentReleased(
-        address indexed to,
-        uint256 amount
-    );
-
     event VoteFinished(
         uint8 result            
     ); 
+
+    /**
+     * @dev Modifiers
+     */
+     modifier CanVote {
+         require(votingCost > 0,"Voting has ended");
+         _;
+     }
     
     /**
      * @dev  Main receiveVote function
@@ -57,18 +72,13 @@ contract Vote {
      */
     function receiveVote(
         uint8 _userVote
-        ) external payable {
-        require (msg.value==votingCost,"Send 0.0001 ether");
-        require (votingCost > 0, "Voting has ended");
+        ) external payable CanVote {
+        require (msg.value == votingCost,"Send correct amount of ether");
+        require (_userVote <= 1, "Incorrect vote");
         require (voted[msg.sender] == false,"User already voted");
 
         voted[msg.sender] = true;
-
-        if (_userVote == 1) { 
-            voters[1].push(msg.sender); //In favor
-        } else {
-            voters[0].push(msg.sender); //Opposing
-        }
+        voters[_userVote].push(msg.sender);
 
         emit UserVoted(msg.sender, _userVote);
     }
@@ -79,17 +89,15 @@ contract Vote {
      * distributes reward system pool between winners(majority)
      *
      * @param _result proposition with the most votes.  1 - In favor vote; 0 - Opposing vote
-     * @param _amount percentaje per voter to be distributed
+     * @param _amount ether per voter to be distributed
      */ 
     function distributePool(
         uint8 _result, 
         uint256  _amount
-        ) internal {      
-        require (votingCost > 0, "Voting has ended");
-        assert (address(this).balance >= _amount);
+        ) internal CanVote {  
+        require(block.timestamp >= startTime && block.timestamp <= endTime, "Voting has ended");    
         for(uint i = 0 ; i < voters[_result].length;) {
             payable(voters[_result][i]).transfer(_amount);
-            emit PaymentReleased(voters[_result][i], _amount);
             unchecked{ i++; } //Save gas avoiding overflow check, i is already limited to < voters[_result].length
         }
     }    
@@ -100,17 +108,15 @@ contract Vote {
      * Sets vote result and calls distributeVotePool() function
      *
      */
-    function voteFinalization() internal {
-        //TIME LOCK FUNCTION
-        require (votingCost > 0, "Voting has ended");
+    function voteFinalization() internal CanVote{
 
-        votingCost == 0;
+        votingCost = 0;
 
-        if (voters[0].length > 0 && voters[1].length > 0){ //Voters 1 > Voters 0
-            return;
+        if (voters[0].length == 0 && voters[1].length == 0){
+            revert("No voters registered");
         }
 
-        if (voters[1].length > voters[0].length ) {
+        if (voters[1].length > voters[0].length ) { //Voters 1 > Voters 0
             emit VoteFinished(1);
             unchecked {
                 distributePool(1,address(this).balance / voters[1].length);
@@ -121,9 +127,6 @@ contract Vote {
                 distributePool(0,address(this).balance / voters[0].length);
             }
         } else { //Voters 0 = Voters 1 
-            if(voters[0].length == 0){  //Only perform one check, given that Voters 0 = Voters 1 
-                revert("No voters registered");
-            }
             uint256 percentajePerWinner;
             emit VoteFinished(2);
             unchecked {
@@ -150,7 +153,7 @@ contract Vote {
 
     /** 
      * @dev Get contract balance
-     * @return uint256 with the balance of the contract
+     * @return uint256, balance of the contract
      */
     function getTotalDeposit() external view returns(uint256) {
         return address(this).balance;
@@ -166,10 +169,17 @@ contract Vote {
     }
      /**
      * @dev get voting cost, if 0, voting closed
-     * @return uint256 of the neccesary money to stake/vote
+     * @return uint256, neccesary ethers to stake/vote
      */
     function getVoteCost() external view returns(uint256) {
         return votingCost;
+    }
+    /**
+     * @dev get timestamps
+     * @return (uint256,uint256) (block.timestamp at init, block.timestamp +  n days)
+     */
+    function getTime() external view returns(uint256,uint256) {
+        return (startTime,endTime);
     }
 
 }
