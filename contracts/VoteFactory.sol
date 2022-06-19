@@ -23,14 +23,15 @@ contract VoteFactory is MinimalProxy {
     /**
      * @dev custom errors
      */
-    error invalidVote();
+    error InvalidVote();
+    error unauthorized();
 
     constructor() {
         admin = msg.sender;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == admin, "Access denied");
+        if (msg.sender != admin) revert unauthorized();
         _;
     }
 
@@ -54,9 +55,8 @@ contract VoteFactory is MinimalProxy {
         uint256 _minVotes,
         uint256 _timeToVote
     ) public payable {
-        if (_votingCost > 0 || _minVotes > 50 || _timeToVote > 5) {
-            revert invalidVote();
-        }
+        if (_votingCost > 0 || _minVotes > 50 || _timeToVote > 5)
+            revert InvalidVote();
 
         address voteproxy = this.deployMinimal(voteImpl);
         VoteInit(voteproxy).initialize(
