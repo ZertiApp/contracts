@@ -20,7 +20,7 @@ contract Vote {
         uint256 _votingCost,
         uint256 _minVotes,
         uint256 _timeToVote,
-        address _sender 
+        address _sender
     ) external {
         require(msg.sender == voteFactory, "Only VoteFactory can initialize");
         require(!isInitialized, "Contract is already initialized");
@@ -47,13 +47,13 @@ contract Vote {
      */
     event UserVoted(address indexed userAddr, uint8 vote);
 
-    event VoteFinished(uint8 result);
+    event VoteFinished(address entity, uint8 result);
 
     /**
      * @dev Modifiers
      */
     modifier CanVote() {
-        require(votingCost !=  0, "Voting has ended");
+        require(votingCost != 0, "Voting has ended");
         require(block.timestamp < endTime, "Voting has ended");
         _;
     }
@@ -87,34 +87,50 @@ contract Vote {
         require(block.timestamp > endTime, "Voting has not ended");
 
         votingCost = 0;
+        uint256 voters0Len = voters[0].length;
+        uint256 voters1Len = voters[1].length;
 
-        if (voters[0].length == 0 && voters[1].length == 0) {
+        if (voters0Len < 1 && voters1Len < 1) {
             revert("No voters registered");
         }
 
-        if (voters[1].length > voters[0].length) {
+        if (voters1Len > voters0Len) {
             //Voters 1 > Voters 0
             unchecked {
-                distributePool(address(this).balance / voters[1].length, voters[1]);
+                distributePool(
+                    address(this).balance / voters1Len,
+                    voters[1],
+                    voters1Len
+                );
             }
-            emit VoteFinished(1);
-        } else if (voters[0].length > voters[1].length) {
+            emit VoteFinished(sender, 1);
+        } else if (voters0Len > voters1Len) {
             //Voters 0 > Voters 1
             unchecked {
-                distributePool(address(this).balance / voters[0].length, voters[0]);
+                distributePool(
+                    address(this).balance / voters0Len,
+                    voters[0],
+                    voters0Len
+                );
             }
-            emit VoteFinished(0);
+            emit VoteFinished(sender, 0);
         } else {
             //Voters 0 = Voters 1
             uint256 percentajePerWinner;
             unchecked {
                 percentajePerWinner =
                     address(this).balance /
-                    (voters[0].length + voters[1].length);
+                    (voters0Len + voters1Len);
             }
-            distributePool(percentajePerWinner, voters[0]);
-            distributePool(percentajePerWinner, voters[1]);
-            emit VoteFinished(2);
+            distributePool( 
+                percentajePerWinner, 
+                voters[0], 
+                voters0Len);
+            distributePool(
+                percentajePerWinner, 
+                voters[1], 
+                voters1Len);
+            emit VoteFinished(sender, 2);
         }
     }
 
@@ -123,11 +139,14 @@ contract Vote {
      * @dev  distributes reward system pool between winners(majority)
      * @param _amount ether per voter to be distributed
      */
-    function distributePool(uint256 _amount, address[] memory _votersResult) internal IsInit {
+    function distributePool(
+        uint256 _amount,
+        address[] memory _votersResult,
+        uint256 _resultLen
+    ) internal IsInit {
         require(votingCost == 0, "Voting has not ended");
         require(block.timestamp > endTime, "Voting has not ended");
-        uint winners = _votersResult.length;
-        for (uint256 i = 0; i < winners;) {
+        for (uint256 i = 0; i < _resultLen; ) {
             payable(_votersResult[i]).transfer(_amount);
             unchecked {
                 ++i;
@@ -138,9 +157,13 @@ contract Vote {
     /**
      * @dev  Fallbacks functions
      */
-    fallback() external payable {}
+    fallback() external payable CanVote {
+        require(votingCost > 0,"Voting has ended");
+    }
 
-    receive() external payable {}
+    receive() external payable {
+        require(votingCost > 0,"Voting has ended");
+    }
 
     /**
      * @dev Get contract balance
