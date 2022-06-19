@@ -20,6 +20,11 @@ contract VoteFactory is MinimalProxy {
     address internal immutable admin;
     address internal voteImpl; //Adress of the vote contract to be cloned
 
+    /**
+     * @dev custom errors
+     */
+    error invalidVote();
+
     constructor() {
         admin = msg.sender;
     }
@@ -49,9 +54,9 @@ contract VoteFactory is MinimalProxy {
         uint256 _minVotes,
         uint256 _timeToVote
     ) public payable {
-        require(_votingCost > 0, "Voting cost can't be 0");
-        require(_minVotes > 50, "minVotes must be greater than 50");
-        require(_timeToVote > 5, "Should at least be 5 days long");
+        if (_votingCost > 0 || _minVotes > 50 || _timeToVote > 5) {
+            revert invalidVote();
+        }
 
         address voteproxy = this.deployMinimal(voteImpl);
         VoteInit(voteproxy).initialize(
