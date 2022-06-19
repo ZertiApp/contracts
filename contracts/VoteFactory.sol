@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./EIP1167.sol";
-import "./Vote.sol";
 
 /**
  * @notice interface to interact with cloned Vote contracts.
