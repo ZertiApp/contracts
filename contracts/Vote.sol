@@ -33,7 +33,7 @@ contract Vote {
     }
 
     /**
-     * @notice Voter info
+     * @dev Voter info
      * @dev voted: O(1) check to know if user already voted
      * @dev voters: Use of tree structure to subdivide voters based on vote for easier processing at distributePool() function
      *              Against(0) --> [addr 1, addr 2, addr 3 ... addr n]
@@ -63,7 +63,7 @@ contract Vote {
     }
 
     /**
-     * @notice  Main receiveVote function
+     * @dev  Main receiveVote function
      * @dev receives ether and stores user's vote and address in tree structure
      * @dev Sets "Voted[user]" to True
      * @dev Reward System: Generates a pool of ether for later distribution between winners(majority)
@@ -119,7 +119,7 @@ contract Vote {
     }
 
     /**
-     * @notice transfer ether to vote winners.
+     * @dev transfer ether to vote winners.
      * @dev  distributes reward system pool between winners(majority)
      * @param _amount ether per voter to be distributed
      */
