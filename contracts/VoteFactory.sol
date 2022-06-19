@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "./EIP1167.sol";
 
@@ -17,7 +17,7 @@ interface VoteInit {
 }
 
 contract VoteFactory is MinimalProxy {
-    address immutable internal admin;
+    address internal immutable admin;
     address internal voteImpl; //Adress of the vote contract to be cloned
 
     constructor() {

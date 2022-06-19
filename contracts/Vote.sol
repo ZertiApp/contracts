@@ -5,7 +5,7 @@
  * @author Lucas Grasso Ramos
  * @notice Vote contract used for entity verification
  */
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 contract Vote {
     //Variables & init
@@ -49,18 +49,31 @@ contract Vote {
 
     event VoteFinished(address entity, uint8 result);
 
+     /**
+     * @dev custom error msgs
+     */
+     error notEnoughVotes();
+     error notInitialized();
+     error votingEnded();
+     error invalidVote();
+     error votingNotEnded();
+
     /**
      * @dev Modifiers
      */
     modifier CanVote() {
-        require(votingCost != 0, "Voting has ended");
-        require(block.timestamp < endTime, "Voting has ended");
+        if(votingCost !=0 && block.timestamp < endTime){
+            revert votingEnded();
+        }
         _;
     }
     modifier IsInit() {
-        require(isInitialized, "Contract not initialized");
+        if(!isInitialized){
+            revert notInitialized();
+        }
         _;
     }
+
 
     /**
      * @dev  Main receiveVote function
@@ -70,9 +83,9 @@ contract Vote {
      * @param _userVote users vote obtained in front-end. 1 - In favor vote; 0 - Opposing vote
      */
     function receiveVote(uint8 _userVote) external payable IsInit CanVote {
-        require(msg.value == votingCost, "Send correct amount of ether");
-        require(_userVote <= 1, "Incorrect vote");
-        require(!voted[msg.sender], "User already voted");
+        if(msg.value != votingCost || _userVote >= 2 || voted[msg.sender]){
+            revert invalidVote();
+        }
 
         voters[_userVote].push(msg.sender);
         voted[msg.sender] = true;
@@ -84,14 +97,13 @@ contract Vote {
      * @dev  Sets vote result and calls distributeVotePool() function
      */
     function voteFinalization() internal IsInit CanVote {
-        require(block.timestamp > endTime, "Voting has not ended");
 
         votingCost = 0;
         uint256 voters0Len = voters[0].length;
         uint256 voters1Len = voters[1].length;
 
-        if (voters0Len < 1 && voters1Len < 1) {
-            revert("No voters registered");
+        if (voters0Len < minVotes && voters1Len < minVotes) {
+            revert notEnoughVotes();
         }
 
         if (voters1Len > voters0Len) {
@@ -144,8 +156,9 @@ contract Vote {
         address[] memory _votersResult,
         uint256 _resultLen
     ) internal IsInit {
-        require(votingCost == 0, "Voting has not ended");
-        require(block.timestamp > endTime, "Voting has not ended");
+        if(votingCost != 0 || block.timestamp > endTime){
+            revert votingNotEnded();
+        }
         for (uint256 i = 0; i < _resultLen; ) {
             payable(_votersResult[i]).transfer(_amount);
             unchecked {
@@ -157,13 +170,9 @@ contract Vote {
     /**
      * @dev  Fallbacks functions
      */
-    fallback() external payable CanVote {
-        require(votingCost > 0,"Voting has ended");
-    }
-
-    receive() external payable {
-        require(votingCost > 0,"Voting has ended");
-    }
+    fallback() external payable CanVote {}
+    
+    receive() external payable {}
 
     /**
      * @dev Get contract balance
