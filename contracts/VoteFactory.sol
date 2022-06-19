@@ -62,21 +62,13 @@ contract VoteFactory is MinimalProxy {
     ) public payable {
         if (_votingCost > 0 || _minVotes > 50 || _timeToVote > 5)
             revert InvalidVote();
-        _createVote (_votingCost, _minVotes, _timeToVote, msg.sender);
-    }
 
-    function _createVote (
-        uint256 _votingCost,
-        uint256 _minVotes,
-        uint256 _timeToVote,
-        address _sender
-    ) internal {
         address voteproxy = this.deployMinimal(voteImpl);
         VoteInit(voteproxy).initialize(
             _votingCost,
             _minVotes,
             _timeToVote,
-            _sender
+            msg.sender
         );
     }
 
