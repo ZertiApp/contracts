@@ -5,49 +5,76 @@ import "./EIP1167.sol";
 import "./Vote.sol";
 
 /**
- * @dev interface to interact with cloned Vote contracts. Used to call the initialize() function
- *      given that cloned contracts cant have constructors.
- *
+ * @notice interface to interact with cloned Vote contracts.
+ * @dev Used to call the initialize() function given that cloned contracts can't have constructors.
  */
 interface VoteInit {
-    function initialize( 
+    function initialize(
         uint256 _votingCost,
         uint256 _minVotes,
         uint256 _timeToVote,
-        address _sender)  external;
+        address _sender
+    ) external;
 }
 
 contract VoteFactory is MinimalProxy {
+    address immutable internal admin;
+    address internal voteImpl; //Adress of the vote contract to be cloned
 
-  address public owner;
-  address public impl; //Adress of the vote contract to be cloned
+    constructor() {
+        admin = msg.sender;
+    }
 
-  constructor (address _impl) {
-    owner = msg.sender;
-    impl = _impl;
-  }
+    modifier onlyOwner() {
+        require(msg.sender == admin, "Access denied");
+        _;
+    }
 
-  modifier onlyOwner() {
-    require(msg.sender == owner, "Access denied");
-    _;
-  }
+    /**
+     * @dev change implementation adress, only callable by admin
+     * @param _newVoteImpl adress of the new implemention/contract to be cloned
+     */
+    function changeImpl(address _newVoteImpl) public onlyOwner {
+        voteImpl = _newVoteImpl;
+    }
 
-  /**
-   * @dev change implementation adress
-   *
-   * @param _newImpl adress of the new implemention/contract to be cloned
-   */
-  function changeImpl(address _newImpl) public onlyOwner {
-    impl = _newImpl;
-  }
+    /**
+     * @notice function to create an instance of Vote.sol
+     * @dev clone and init Vote function
+     * @param _votingCost should be N usd, info gathered in the front-end
+     * @param _minVotes minimal votes to win, determines entrerprise level
+     * @param _timeToVote days to vote, should be at least N days.
+     */
+    function createVote(
+        uint256 _votingCost,
+        uint256 _minVotes,
+        uint256 _timeToVote
+    ) public payable {
+        require(_votingCost > 0, "Voting cost can't be 0");
+        require(_minVotes > 50, "minVotes must be greater than 50");
+        require(_timeToVote > 5, "Should at least be 5 days long");
 
-  /**
-   * @dev clone and init Vote function
-   * 
-   */
-  function createVote(uint256 _votingCost, uint256 _minVotes, uint256 _timeToVote) public payable {
-    require(_votingCost > 0, "Voting cost can't be 0");
-    address voteproxy = this.deployMinimal(impl);
-    VoteInit(voteproxy).initialize(_votingCost, _minVotes, _timeToVote, msg.sender);
-  }
+        address voteproxy = this.deployMinimal(voteImpl);
+        VoteInit(voteproxy).initialize(
+            _votingCost,
+            _minVotes,
+            _timeToVote,
+            msg.sender
+        );
+    }
+
+    /**
+     * @dev  Fallbacks functions
+     */
+    fallback() external payable {}
+
+    receive() external payable {}
+
+    /**
+     * @dev get vote impl address
+     * @return address addr of the implementation
+     */
+    function getImplAddr() external view returns (address) {
+        return voteImpl;
+    }
 }
