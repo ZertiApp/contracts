@@ -107,32 +107,26 @@ contract Vote {
 
         if (voters1Len > voters0Len) {
             //Voters 1 > Voters 0
-            unchecked {
-                distributePool(
-                    address(this).balance / voters1Len,
-                    voters[1],
-                    voters1Len
-                );
-            }
+            distributePool(
+                address(this).balance / voters1Len,
+                voters[1],
+                voters1Len
+            );
             emit VoteFinished(sender, 1);
         } else if (voters0Len > voters1Len) {
             //Voters 0 > Voters 1
-            unchecked {
-                distributePool(
-                    address(this).balance / voters0Len,
-                    voters[0],
-                    voters0Len
-                );
-            }
+            distributePool(
+                address(this).balance / voters0Len,
+                voters[0],
+                voters0Len
+            );
             emit VoteFinished(sender, 0);
         } else {
             //Voters 0 = Voters 1
             uint256 percentajePerWinner;
-            unchecked {
-                percentajePerWinner =
-                    address(this).balance /
-                    (voters0Len + voters1Len);
-            }
+            percentajePerWinner =
+                address(this).balance /
+                (voters0Len + voters1Len);
             distributePool(percentajePerWinner, voters[0], voters0Len);
             distributePool(percentajePerWinner, voters[1], voters1Len);
             emit VoteFinished(sender, 2);

@@ -26,6 +26,11 @@ contract VoteFactory is MinimalProxy {
     error InvalidVote();
     error unauthorized();
 
+    /**
+     * @dev events
+     */
+    event EthReceived(address _sender, uint256 _amount);
+
     constructor() {
         admin = msg.sender;
     }
@@ -72,7 +77,9 @@ contract VoteFactory is MinimalProxy {
      */
     fallback() external payable {}
 
-    receive() external payable {}
+    receive() external payable {
+        emit EthReceived(msg.sender, msg.value);
+    }
 
     /**
      * @dev get vote impl address
