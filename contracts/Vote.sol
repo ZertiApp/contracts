@@ -46,7 +46,7 @@ contract Vote {
      * @dev Modifiers
      */
     modifier CanVote() {
-        if (votingCost != 0 && block.timestamp < endTime) revert VotingEnded();
+        if (votingCost == 0 || block.timestamp > endTime) revert VotingEnded();
         _;
     }
     modifier IsInit() {
@@ -67,13 +67,16 @@ contract Vote {
         uint256 _timeToVote,
         address _sender
     ) external {
+        /*
         if (msg.sender != voteFactory || isInitialized)
             revert CantInit(msg.sender);
-
+        */
+        if (isInitialized)
+            revert CantInit(msg.sender);
         isInitialized = true;
         votingCost = _votingCost;
         minVotes = _minVotes;
-        endTime = block.timestamp + _timeToVote * 1 days;
+        endTime = block.timestamp + (_timeToVote * 1 days);
         sender = _sender;
     }
 
@@ -143,7 +146,7 @@ contract Vote {
         address[] memory _votersResult,
         uint256 _resultLen
     ) internal IsInit {
-        if (votingCost != 0 || block.timestamp > endTime)
+        if (votingCost != 0 || block.timestamp < endTime)
             revert VotingNotEnded();
         for (uint256 i = 0; i < _resultLen; ) {
             payable(_votersResult[i]).transfer(_amount);
@@ -175,6 +178,30 @@ contract Vote {
      */
     function getUserVoted(address _addr) external view IsInit returns (bool) {
         return voted[_addr];
+    }
+
+    /**
+     * @dev check if contract is initialized
+     * @return bool stating if contract is init
+     */
+    function getInit() external view IsInit returns (bool) {
+        return isInitialized;
+    }
+
+    /**
+     * @dev check against votes
+     * @return uint256 n of votes against.
+     */
+    function getVotesAgainst() external view IsInit returns (uint256) {
+        return voters[0].length;
+    }
+
+    /**
+     * @dev check in favour votes
+     * @return uint256 n of votes in favour.
+     */
+    function getVotesInFavour() external view IsInit returns (uint256) {
+        return voters[1].length;
     }
 
     /**

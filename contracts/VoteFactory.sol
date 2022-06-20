@@ -35,7 +35,7 @@ contract VoteFactory is MinimalProxy {
         admin = msg.sender;
     }
 
-    modifier onlyOwner() {
+    modifier onlyAdmin() {
         if (msg.sender != admin) revert unauthorized();
         _;
     }
@@ -44,7 +44,7 @@ contract VoteFactory is MinimalProxy {
      * @dev change implementation adress, only callable by admin
      * @param _newVoteImpl adress of the new implemention/contract to be cloned
      */
-    function changeImpl(address _newVoteImpl) public onlyOwner {
+    function changeImpl(address _newVoteImpl) public onlyAdmin {
         voteImpl = _newVoteImpl;
     }
 
@@ -60,11 +60,11 @@ contract VoteFactory is MinimalProxy {
         uint256 _minVotes,
         uint256 _timeToVote
     ) public payable {
-        if (_votingCost > 0 || _minVotes > 50 || _timeToVote > 5)
+        if (_votingCost == 0 || _minVotes < 25 || _timeToVote < 2)
             revert InvalidVote();
 
-        address voteproxy = this.deployMinimal(voteImpl);
-        VoteInit(voteproxy).initialize(
+        address voteProxy = this.deployMinimal(voteImpl);
+        VoteInit(voteProxy).initialize(
             _votingCost,
             _minVotes,
             _timeToVote,

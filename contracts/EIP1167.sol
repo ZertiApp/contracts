@@ -10,7 +10,7 @@ pragma solidity ^0.8.4;
 contract MinimalProxy {
 
     event ProxyCreated(
-        address proxy
+        address indexed proxy
     );
 
     function deployMinimal(address target) external returns (address result) {
