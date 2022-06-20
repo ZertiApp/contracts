@@ -49,7 +49,7 @@ describe("Cloning test", function () {
 
   });
 
-  it("Should Initialize endTime correctly", async function () {
+  it("Should Initialize variables correctly", async function () {
     const VoteFactory = await hre.ethers.getContractFactory("VoteFactory");
     const vf = await VoteFactory.deploy();
     const Vote = await hre.ethers.getContractFactory("Vote");
@@ -67,9 +67,10 @@ describe("Cloning test", function () {
     }
     proxyAddress = proxyAddress[0];
     const voteProxy = await hre.ethers.getContractAt("Vote", proxyAddress);   
-    
+
     const endDate = new Date(parseInt(await voteProxy.getEndTime())* 1000);
     const ExpectedEndDate = new Date(ms+6*24*60*60 * 1000);
     expect(endDate.getDate()).to.equal(ExpectedEndDate.getDate());
+    expect(parseInt(await voteProxy.getVotingCost())).to.equal(_votingCost);
   });
 });

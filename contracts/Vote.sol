@@ -208,7 +208,7 @@ contract Vote {
      * @dev get voting cost, if 0, voting closed
      * @return uint256, neccesary ethers to stake/vote.
      */
-    function getVoteCost() external view IsInit returns (uint256) {
+    function getVotingCost() external view IsInit returns (uint256) {
         return votingCost;
     }
 
