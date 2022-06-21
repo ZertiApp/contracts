@@ -49,7 +49,7 @@ describe("Cloning test", function () {
 
   });
 
-  it("Should Initialize variables correctly", async function () {
+  it("Should initialize variables correctly", async function () {
     const VoteFactory = await hre.ethers.getContractFactory("VoteFactory");
     const vf = await VoteFactory.deploy();
     const Vote = await hre.ethers.getContractFactory("Vote");
