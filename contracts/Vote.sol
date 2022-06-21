@@ -2,7 +2,7 @@
 
 /**
  * @title Vote contract
- * @author Lucas Grasso Ramos
+ * @author Zerti Team - Lucas Grasso Ramos
  * @notice Vote contract used for entity verification.
  */
 pragma solidity ^0.8.4;
