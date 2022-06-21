@@ -165,6 +165,14 @@ contract Vote {
 
     /**
      * @dev Get contract balance
+     * @return address, addr of entity being voted
+     */
+    function getWhoBeingVoted() external view IsInit returns (address) {
+        return sender;
+    }
+
+    /**
+     * @dev Get contract balance
      * @return uint256, balance of the contract.
      */
     function getTotalDeposit() external view IsInit returns (uint256) {

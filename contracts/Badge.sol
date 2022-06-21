@@ -18,17 +18,17 @@ contract Badges {
 
     mapping(uint256 => Badge) badges; //id to badge
 
-    function mint(string memory _name, string _description, string _image) {
+    function mint(string calldata _name, string calldata _description, string calldata _image) external {
         idCount++;
         badges[idCount] = Badge(idCount, _name, _description, _image);
     }
 
-    function receive() {
+    /* function receive() {
 
     }
 
     function burn(uint256 memory _id){
         badges[_id].
-    }
+    } */
 
 }
