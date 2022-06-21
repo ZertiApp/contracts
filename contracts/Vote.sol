@@ -74,20 +74,20 @@ contract Vote {
         if (isInitialized)
             revert CantInit(msg.sender);
         isInitialized = true;
-        votingCost = _votingCost;
+        votingCost = _votingCost * 1 ether;
         minVotes = _minVotes;
         endTime = block.timestamp + (_timeToVote * 1 days);
         sender = _sender;
     }
 
     /**
-     * @dev  Main receiveVote function.
+     * @dev  Main sendVote function.
      * @dev receives ether and stores user's vote and address in tree structure.
      * @dev Sets "Voted[user]" to True.
      * @dev Reward System: Generates a pool of ether for later distribution between winners(majority).
      * @param _userVote users vote obtained in front-end. 1 - In favor vote; 0 - Opposing vote.
      */
-    function receiveVote(uint8 _userVote) external payable IsInit CanVote {
+    function sendVote(uint8 _userVote) external payable IsInit CanVote {
         if (msg.value != votingCost || _userVote >= 2 || voted[msg.sender])
             revert InvalidVote();
 

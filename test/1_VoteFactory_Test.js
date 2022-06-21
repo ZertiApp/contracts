@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("Cloning test", function () {
-  const _votingCost = 5;
+  let _votingCost = 5;
   const _minVotes = 50;
   const _timeToVote = 6;
   it("Should change Vote Implementation address", async function () {
@@ -71,6 +71,7 @@ describe("Cloning test", function () {
     const endDate = new Date(parseInt(await voteProxy.getEndTime())* 1000);
     const ExpectedEndDate = new Date(ms+6*24*60*60 * 1000);
     expect(endDate.getDate()).to.equal(ExpectedEndDate.getDate());
-    expect(parseInt(await voteProxy.getVotingCost())).to.equal(_votingCost);
+    _votingCost = (_votingCost.toString() + ".0")
+    expect(await voteProxy.getVotingCost()).to.equal(ethers.utils.parseEther(_votingCost));
   });
 });
