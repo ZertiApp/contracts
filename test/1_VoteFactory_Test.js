@@ -23,8 +23,9 @@ describe("Cloning test", function () {
     // wait until the transaction is mined
     expect(await vf.getImplAddr()).to.equal(vote2.address);
 
-    console.log("       Vote1 address: " + vote.address);
-    console.log("       Vote2 address: " + vote2.address);
+    /* console.log("       Vote1 address: " + vote.address);
+    console.log("       Vote2 address: " + vote2.address); */
+    
   });
   
   it("Should clone and initialize Vote contract", async function () {
