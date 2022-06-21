@@ -5,7 +5,7 @@ describe("Vote test", function () {
   const _votingCost = 10;
   const _minVotes = 2;
   const _timeToVote = 2;
-    it("Should receive votes (Vote noProxy)", async function () {
+    it("Should receive votes (Vote-noProxy)", async function () {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
         const Vote = await hre.ethers.getContractFactory("Vote");
@@ -27,5 +27,25 @@ describe("Vote test", function () {
 
         expect(await vote.getVotesAgainst()).to.equal(3);
         expect(await vote.getVotesInFavour()).to.equal(1);
+      });
+      it("Should receive votes (Vote-Proxy)", async function () {
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+
+        const VoteFactory = await hre.ethers.getContractFactory("VoteFactory");
+        const vf = await VoteFactory.deploy();
+        const Vote = await hre.ethers.getContractFactory("Vote");
+        const vote = await Vote.deploy();
+
+        const changeImplTx = await vf.changeImpl(vote.address);
+        await changeImplTx.wait();
+
+        const createVoteTx = await vf.createVote(_votingCost,_minVotes,_timeToVote);
+        const receipt = await createVoteTx.wait();
+        let proxyAddress;
+        for (const event of receipt.events) {
+          proxyAddress = event.args;
+        }
+        proxyAddress = proxyAddress[0];
+        const voteProxy = await hre.ethers.getContractAt("Vote", proxyAddress);
       });
 });
