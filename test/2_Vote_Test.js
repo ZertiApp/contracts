@@ -2,8 +2,8 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("Vote test", function () {
-  const _votingCost = 10;
-  const _minVotes = 2;
+  const _votingCost = 5;
+  const _minVotes = 50;
   const _timeToVote = 2;
     it("Should receive votes (Vote-noProxy)", async function () {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
@@ -28,6 +28,7 @@ describe("Vote test", function () {
         expect(await vote.getVotesAgainst()).to.equal(3);
         expect(await vote.getVotesInFavour()).to.equal(1);
       });
+
       it("Should receive votes (Vote-Proxy)", async function () {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
