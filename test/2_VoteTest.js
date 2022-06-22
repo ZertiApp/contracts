@@ -1,6 +1,10 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe("Vote.sol", function () {
   const _votingCost = 5;
   const _minVotes = 3;
@@ -59,6 +63,7 @@ describe("Vote.sol", function () {
     _votesInFavour++;
     _nVotes++;
 
+    await delay(2000);
     expect(await voteProxy.getVotesAgainst()).to.equal(_votesAgainst);
     expect(await voteProxy.getVotesInFavour()).to.equal(_votesInFavour);
     expect(await voteProxy.getUserVoted(owner.address)).to.equal(true);
@@ -68,6 +73,7 @@ describe("Vote.sol", function () {
     expect(await voteProxy.getTotalDeposit()).to.equal(
       ethers.utils.parseEther((_votingCost * _nVotes).toString() + ".0")
     );
+
   });
 
   /* it ("Should distribute pool correctly" , async function () {
