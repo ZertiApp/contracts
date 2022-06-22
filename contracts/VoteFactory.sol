@@ -60,7 +60,7 @@ contract VoteFactory is MinimalProxy {
         uint256 _minVotes,
         uint256 _timeToVote
     ) public payable {
-        if (_votingCost == 0 || _minVotes < 25 || _timeToVote < 2)
+        if (_votingCost == 0 || _minVotes < 2 || _timeToVote < 2) //¡¡¡¡¡¡ONLY FOR TESTING!!!!!!!!
             revert InvalidVote();
 
         address voteProxy = this.deployMinimal(voteImpl);

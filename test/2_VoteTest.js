@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 
 describe("Vote.sol", function () {
   const _votingCost = 5;
-  const _mi_nVotes = 50;
+  const _minVotes = 3;
   const _timeToVote = 2;
   it("Should receive votes correctly", async function () {
     const [owner, addr1, addr2, addr3] = await ethers.getSigners();
@@ -18,7 +18,7 @@ describe("Vote.sol", function () {
 
     const createVoteTx = await vf.createVote(
       _votingCost,
-      _mi_nVotes,
+      _minVotes,
       _timeToVote
     );
     const receipt = await createVoteTx.wait();
@@ -69,4 +69,57 @@ describe("Vote.sol", function () {
       ethers.utils.parseEther((_votingCost * _nVotes).toString() + ".0")
     );
   });
+
+  /* it ("Should distribute pool correctly" , async function () {
+
+    const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+
+    const VoteFactory = await hre.ethers.getContractFactory("VoteFactory");
+    const vf = await VoteFactory.deploy();
+    const Vote = await hre.ethers.getContractFactory("Vote");
+    const vote = await Vote.deploy();
+
+    const changeImplTx = await vf.changeImpl(vote.address);
+    await changeImplTx.wait();
+
+    const createVoteTx = await vf.createVote(
+      _votingCost,
+      _minVotes,
+      _timeToVote
+    );
+    const receipt = await createVoteTx.wait();
+
+    let proxyAddress;
+    for (const event of receipt.events) {
+      proxyAddress = event.args;
+    }
+    proxyAddress = proxyAddress[0];
+
+    const voteProxy = await hre.ethers.getContractAt("Vote", proxyAddress);
+
+    const options = {
+      value: ethers.utils.parseEther(_votingCost.toString() + ".0"),
+    };
+
+    let voteTx = await voteProxy.sendVote(0, options);
+    await voteTx.wait();
+
+    voteTx = await voteProxy.connect(addr1).sendVote(0, options);
+    await voteTx.wait();
+
+    voteTx = await voteProxy.connect(addr2).sendVote(0, options);
+    await voteTx.wait();
+
+    voteTx = await voteProxy.connect(addr3).sendVote(1, options);
+    await voteTx.wait();
+
+    const voteFinalizationTx = await voteProxy.connect(owner).voteFinalization();
+    await voteFinalizationTx.wait();
+
+    await 
+    expect(await voteProxy.getTotalDeposit()).to.equal(
+      ethers.utils.parseEther("0.0")
+    );
+
+  }); */
 });

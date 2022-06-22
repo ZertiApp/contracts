@@ -72,7 +72,7 @@ contract Vote {
             revert CantInit(msg.sender);
         */
         if (isInitialized)
-            revert CantInit(msg.sender);
+            revert CantInit(msg.sender); //¡¡¡¡¡¡ONLY FOR TESTING!!!!!
         isInitialized = true;
         votingCost = _votingCost * 1 ether;
         minVotes = _minVotes;
@@ -100,7 +100,7 @@ contract Vote {
     /**
      * @dev  Sets vote result and calls distributeVotePool() function
      */
-    function voteFinalization() internal IsInit CanVote {
+    function voteFinalization() external IsInit CanVote { //¡¡¡ONLY FOR TESTING!!!
         votingCost = 0;
         uint256 voters0Len = voters[0].length;
         uint256 voters1Len = voters[1].length;
@@ -146,8 +146,8 @@ contract Vote {
         address[] memory _votersResult,
         uint256 _resultLen
     ) internal IsInit {
-        if (votingCost != 0 || block.timestamp < endTime)
-            revert VotingNotEnded();
+        /* if (votingCost != 0 || block.timestamp < endTime)
+            revert VotingNotEnded(); */ //¡¡¡¡ONLY FOR TESTING!!!!!!!!
         for (uint256 i = 0; i < _resultLen; ) {
             payable(_votersResult[i]).transfer(_amount);
             unchecked {
