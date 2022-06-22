@@ -5,7 +5,7 @@ describe("VoteFactory.sol", function () {
   let _votingCost = 5;
   const _minVotes = 50;
   const _timeToVote = 6;
-  it("Should change Vote Implementation address", async function () {
+  it("Should change Vote implementation address", async function () {
     const VoteFactory = await hre.ethers.getContractFactory("VoteFactory");
     const vf = await VoteFactory.deploy();
     const Vote = await hre.ethers.getContractFactory("Vote");
@@ -28,7 +28,7 @@ describe("VoteFactory.sol", function () {
     
   });
   describe("Initialization", function () {
-    it("Should clone and initialize Vote contract", async function () {
+    it("Should clone and initialize Vote contracts", async function () {
       const VoteFactory = await hre.ethers.getContractFactory("VoteFactory");
       const vf = await VoteFactory.deploy();
       const Vote = await hre.ethers.getContractFactory("Vote");
@@ -37,8 +37,8 @@ describe("VoteFactory.sol", function () {
       const changeImplTx = await vf.changeImpl(vote.address);
       await changeImplTx.wait();
 
-      const createVoteTx = await vf.createVote(_votingCost,_minVotes,_timeToVote);
-      const receipt = await createVoteTx.wait();
+      let createVoteTx = await vf.createVote(_votingCost,_minVotes,_timeToVote);
+      let receipt = await createVoteTx.wait();
       let proxyAddress;
       for (const event of receipt.events) {
         proxyAddress = event.args;
@@ -48,6 +48,18 @@ describe("VoteFactory.sol", function () {
       
       expect(await voteProxy.getInit()).to.equal(true);
 
+      createVoteTx = await vf.createVote(_votingCost,_minVotes,_timeToVote);
+      receipt = await createVoteTx.wait();
+      proxyAddress;
+      for (const event of receipt.events) {
+        proxyAddress = event.args;
+      }
+      proxyAddress = proxyAddress[0];
+      const voteProxy2 = await hre.ethers.getContractAt("Vote", proxyAddress);   
+      
+      expect(await voteProxy2.getInit()).to.equal(true);
+
+      expect(voteProxy.address).to.not.equal(voteProxy2.address)
     });
 
     it("Should initialize variables correctly", async function () {
