@@ -6,7 +6,7 @@ function delay(ms) {
 }
 
 describe("Vote.sol", function () {
-  const _votingCost = 5;
+  const _votingCost = 3;
   const _minVotes = 3;
   const _timeToVote = 2;
   it("Should receive votes correctly", async function () {
@@ -40,7 +40,7 @@ describe("Vote.sol", function () {
     let _votesInFavour = 0;
 
     const options = {
-      value: ethers.utils.parseEther(_votingCost.toString() + ".0"),
+      value: ethers.utils.parseEther(_votingCost.toString() + ".0"), 
     };
 
     let voteTx = await voteProxy.sendVote(0, options);
@@ -63,7 +63,7 @@ describe("Vote.sol", function () {
     _votesInFavour++;
     _nVotes++;
 
-    await delay(2000);
+    await delay(500);
     expect(await voteProxy.getVotesAgainst()).to.equal(_votesAgainst);
     expect(await voteProxy.getVotesInFavour()).to.equal(_votesInFavour);
     expect(await voteProxy.getUserVoted(owner.address)).to.equal(true);
@@ -76,7 +76,7 @@ describe("Vote.sol", function () {
 
   });
 
-  /* it ("Should distribute pool correctly" , async function () {
+  it ("Should distribute pool correctly" , async function () {
 
     const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
@@ -122,10 +122,10 @@ describe("Vote.sol", function () {
     const voteFinalizationTx = await voteProxy.connect(owner).voteFinalization();
     await voteFinalizationTx.wait();
 
-    await 
+    await delay(500);
     expect(await voteProxy.getTotalDeposit()).to.equal(
-      ethers.utils.parseEther("0.0")
+      ethers.utils.parseEther("0.0")  //FIX DIVISION ERROR, SOLIDITY DOES NOT SUPPORT FLOATING POINT
     );
 
-  }); */
+  });
 });

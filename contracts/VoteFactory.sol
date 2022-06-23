@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./EIP1167.sol";
+import "hardhat/console.sol";
 
 /**
  * @notice interface to interact with cloned Vote contracts.
@@ -46,6 +47,7 @@ contract VoteFactory is MinimalProxy {
      */
     function changeImpl(address _newVoteImpl) public onlyAdmin {
         voteImpl = _newVoteImpl;
+        console.log("New implementation address is: %s", _newVoteImpl);
     }
 
     /**
@@ -63,8 +65,11 @@ contract VoteFactory is MinimalProxy {
         if (_votingCost == 0 || _minVotes < 2 || _timeToVote < 2) //¡¡¡¡¡¡ONLY FOR TESTING!!!!!!!!
             revert InvalidVote();
 
-        address voteProxy = this.deployMinimal(voteImpl);
-        VoteInit(voteProxy).initialize(
+        address _voteProxy = this.deployMinimal(voteImpl);
+        
+        console.log("Proxy created at address: %s", _voteProxy );
+
+        VoteInit(_voteProxy).initialize(
             _votingCost,
             _minVotes,
             _timeToVote,

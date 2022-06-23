@@ -43,6 +43,8 @@ module.exports = {
     currency: "USD", 
     token: "MATIC",
     showTimeSpent: true,
+    /* outputFile: "docs/this.gasReporter.txt",
+    noColors:true, */
     gasPriceApi: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice", 
     coinmarketcap: ENV["COINMARKETCAP_API_KEY"],
   },

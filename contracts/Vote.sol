@@ -7,6 +7,8 @@
  */
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
+
 contract Vote {
     //Variables & init
     bool internal isInitialized = false;
@@ -78,6 +80,7 @@ contract Vote {
         minVotes = _minVotes;
         endTime = block.timestamp + (_timeToVote * 1 days);
         sender = _sender;
+        console.log("Proxy initialized correactly at address: %s", address(this) );
     }
 
     /**
@@ -95,6 +98,8 @@ contract Vote {
         voted[msg.sender] = true;
 
         emit UserVoted(msg.sender, _userVote);
+
+        console.log("Received vote %s from %s", _userVote, msg.sender);
     }
 
     /**
@@ -146,10 +151,14 @@ contract Vote {
         address[] memory _votersResult,
         uint256 _resultLen
     ) internal IsInit {
+        console.log("Contract balance at start is: %s gwei", address(this).balance);
+        console.log("Amount to be distributed is: %s gwei", _amount);
+
         /* if (votingCost != 0 || block.timestamp < endTime)
             revert VotingNotEnded(); */ //¡¡¡¡ONLY FOR TESTING!!!!!!!!
         for (uint256 i = 0; i < _resultLen; ) {
             payable(_votersResult[i]).transfer(_amount);
+            console.log("Contract balance at iteration n%s is: %s gwei", i+1, address(this).balance);
             unchecked {
                 ++i;
             } //Save gas avoiding overflow check, i is already limited to < voters[_result].length
