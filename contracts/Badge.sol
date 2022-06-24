@@ -14,13 +14,22 @@ contract Badges {
         string name;
         string description;
         string image;
+        address owner;
     }
 
     mapping(uint256 => Badge) badges; //id to badge
+    mapping(uint => address) balance; 
 
     function mint(string calldata _name, string calldata _description, string calldata _image) external {
         idCount++;
-        badges[idCount] = Badge(idCount, _name, _description, _image);
+        badges[idCount] = Badge(idCount, _name, _description, _image, msg.sender);
+    }
+
+    function transferFrom(address[] _to,  uint _id) public{
+        require(msg.sender == badges[_id].owner);
+        for(int i = 0; i<from.lenght(), i++){
+            
+        }
     }
 
     /* function receive() {
