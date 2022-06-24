@@ -32,12 +32,12 @@ When a vote finishes, as mentioned before, the pool is distributed based on majo
 # The Zerti team:
 
 ### Blockchain Developers:
-* Matias Arazi
-* Lucas Grasso
+* [Matias Arazi](https://github.com/MatiArazi)
+* [Lucas Grasso](https://github.com/LucasGrasso)
 ### Web developers
-* Ilan Tobal
-* Naomi Couriel
-* Nicolas Halperin
+* [Ilan Tobal](https://github.com/IlanTobal)
+* [Naomi Couriel](https://github.com/naomicouriel)
+* [Nicolas Halperin](https://github.com/NicoHalpe)
 ### Design and UX:
 * Victoria Salgado
 * Matilde Azubel
