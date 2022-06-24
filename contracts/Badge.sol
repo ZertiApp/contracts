@@ -7,37 +7,18 @@
  */
 pragma solidity ^0.8.4;
 
-contract Badges {
-    uint256 idCount = 0;
-    struct Badge{
-        uint256 id;
-        string name;
-        string description;
-        string image;
-        address owner;
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+
+contract Badge is ERC1155 {
+    uint256 public constant ort = 1;
+    uint256 public constant oma = 2;
+    uint256 public constant launchpad = 3;
+    uint256 public constant coderhouse = 4;
+
+    constructor() ERC1155("test/BadgesJSON/{id}.json") {
+        _mint(msg.sender, ort, 10**27, "");
+        _mint(msg.sender, oma, 1, "");
+        _mint(msg.sender, launchpad, 10**9, "");
+        _mint(msg.sender, coderhouse, 10**9, "");
     }
-
-    mapping(uint256 => Badge) badges; //id to badge
-    mapping(uint => address) balance; 
-
-    function mint(string calldata _name, string calldata _description, string calldata _image) external {
-        idCount++;
-        badges[idCount] = Badge(idCount, _name, _description, _image, msg.sender);
-    }
-
-    function transferFrom(address[] _to,  uint _id) public{
-        require(msg.sender == badges[_id].owner);
-        for(int i = 0; i<from.lenght(), i++){
-            
-        }
-    }
-
-    /* function receive() {
-
-    }
-
-    function burn(uint256 memory _id){
-        badges[_id].
-    } */
-
 }
