@@ -6,7 +6,7 @@ function delay(ms) {
 }
 
 describe("Vote.sol", function () {
-  const _votingCost = 3;
+  const _votingCost = 5;
   const _minVotes = 3;
   const _timeToVote = 2;
   it("Should receive votes correctly", async function () {
