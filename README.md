@@ -9,6 +9,9 @@ __How it works:__
 * VoteFactory & EIP1167 Contracts - Use of the EIP-1167 "Minimal Proxy" standard for cheap cloning and usage of vote contract.
 * Vote Contract - Ballot and pool reward system for entity validation.
 
+---
+
+## Voting System:
 ![ProxyPattern](docs\ProxyPattern.png)
 
 We will be calling acaemic institutes and/or enterprises wishing to emit certificates entities. When one of such postulates as one, it interacts with the VoteFactory contract, which uses an upgradeable EIP1167 implementation, creating a clone of the Vote contract. 
