@@ -20,12 +20,20 @@ interface VoteInit {
 contract VoteFactory is MinimalProxy {
     address internal immutable admin;
     address internal voteImpl; //Adress of the vote contract to be cloned
+    mapping(address => bool) public postulations;
 
     /**
      * @dev custom errors
      */
-    error InvalidVote();
-    error unauthorized();
+    error InvalidVotation(
+        uint256 _votingCost,
+        uint256 _minVotes,
+        uint256 _timeToVote
+    );
+    error unauthorized(address _sender);
+    error AlreadyPostulated(address _sender);
+    error InvalidAmount(uint256 _amount);
+    error AlreadySelectedAsEntity(address _sender);
 
     /**
      * @dev events
@@ -37,7 +45,7 @@ contract VoteFactory is MinimalProxy {
     }
 
     modifier onlyAdmin() {
-        if (msg.sender != admin) revert unauthorized();
+        if (msg.sender != admin) revert unauthorized(msg.sender);
         _;
     }
 
@@ -62,12 +70,14 @@ contract VoteFactory is MinimalProxy {
         uint256 _minVotes,
         uint256 _timeToVote
     ) public payable {
-        if (_votingCost == 0 || _minVotes < 2 || _timeToVote < 2) //¡¡¡¡¡¡ONLY FOR TESTING!!!!!!!!
-            revert InvalidVote();
+        if (postulations[msg.sender]) revert AlreadyPostulated(msg.sender);
+        if (_votingCost == 0 || _minVotes < 2 || _timeToVote < 2)
+            //¡¡¡¡¡¡ONLY FOR TESTING!!!!!!!!
+            revert InvalidVotation(_votingCost, _minVotes, _timeToVote);
 
         address _voteProxy = this.deployMinimal(voteImpl);
-        
-        console.log("Proxy created at address: %s", _voteProxy );
+
+        console.log("Proxy created at address: %s", _voteProxy);
 
         VoteInit(_voteProxy).initialize(
             _votingCost,
@@ -75,7 +85,21 @@ contract VoteFactory is MinimalProxy {
             _timeToVote,
             msg.sender
         );
+
+        postulations[msg.sender] = true;
     }
+
+    /**
+     * @dev  Allows entity to repostulate
+     */
+    function rePostulationAllowance() public payable {
+        if(postulations[msg.sender])
+            revert AlreadySelectedAsEntity(msg.sender);
+        if(msg.value != 10 ether)
+            revert InvalidAmount(msg.value);
+        
+        postulations[msg.sender] = false;
+    } 
 
     /**
      * @dev  Fallbacks functions
