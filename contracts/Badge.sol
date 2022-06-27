@@ -15,10 +15,10 @@ contract Zerti {
         address owner;
         string data;
     }
-    mapping(uint256 => Zerti) zerties;
-    mapping(uint256 => uint256) amount;
-    mapping(address => mapping(uint256 => bool)) owners;
-    mapping(address => mapping(uint256 => bool)) pending;
+    mapping(uint256 => Zerti) zerties; // id to Zerti
+    mapping(uint256 => uint256) amount;// the amounts of tokens for each Zerti
+    mapping(address => mapping(uint256 => bool)) owners;// if owner has a specific Zerti
+    mapping(address => mapping(uint256 => bool)) pending;// if owner has pending a specific Zerti
 
     function mint(string data) public {
         zerties[++nonce] = Zerti(msg.sender, data);
@@ -47,7 +47,7 @@ contract Zerti {
         amount[id]--;
         owners[msg.sender][id] = false;
     }
-
+    /*
     uint256 public constant ort = 1;
     uint256 public constant oma = 2;
     uint256 public constant launchpad = 3;
@@ -58,5 +58,5 @@ contract Zerti {
         _mint(msg.sender, oma, 1, "");
         _mint(msg.sender, launchpad, 10**9, "");
         _mint(msg.sender, coderhouse, 10**9, "");
-    }
+    }*/
 }
