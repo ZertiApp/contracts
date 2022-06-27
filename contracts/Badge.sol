@@ -27,26 +27,51 @@ contract EIPARAZI {
     mapping(address => mapping(uint256 => bool)) internal pending; // if owner has pending a specific Zerti
     mapping(address => bool) public validatedEntities;
 
-    function idInfo(uint256 id) external view returns (address, string memory) {
+        //View
+    function idInfo(uint id) external view returns(address, string memory){
         return (zerties[id].owner, zerties[id].data);
     }
 
-    /*
-    uint[] myzerti;
+    function idAmount(uint id) external view returns(uint){
+        return (amount[id]);
+    }
+    
     function zertiesFrom(address from) external view returns(uint[] memory){
-        myzerti = [];
+        uint tokenCount = 0;
         for(uint i = 1; i<=nonce; i++){
             if(owners[from][i]){
-                myzerti.push(i);
+                ++tokenCount;
             }
         }
-        return myzerti;
+        uint[] memory myzerties = new uint[](tokenCount);
+         for(uint i = 1; i<=nonce; i++){
+            if(owners[from][i]){
+                myzerties[--tokenCount] = i;
+            }
+        }
+        return myzerties;
     }
-    */
 
+    function pendingFrom(address from) external view returns(uint[] memory){
+        uint tokenCount = 0;
+        for(uint i = 1; i<=nonce; i++){
+            if(pending[from][i]){
+                ++tokenCount;
+            }
+        }
+        uint[] memory myzerties = new uint[](tokenCount);
+            for(uint i = 1; i<=nonce; i++){
+            if(pending[from][i]){
+                myzerties[--tokenCount] = i;
+            }
+        }
+        return myzerties;
+    }
+    
+    //Function
     function mint(string calldata _data) external {
         if(!validatedEntities[msg.sender])
-            revert NotAnEntity(msg.sender);
+            //revert NotAnEntity(msg.sender);
         _mint(_data);
     }
 
