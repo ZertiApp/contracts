@@ -7,26 +7,27 @@
  */
 pragma solidity ^0.8.4;
 
-
-contract Zerti {
+contract EIPARAZI {
     uint256 private nonce;
 
-    struct zerti {
+    struct Zerti {
         address owner;
         string data;
     }
 
     error Unauthorized(address _sender);
-    error NotOwned();
+    error AlreadyOwned();
+    error AlreadyInProccess();
+    error CanNotClaim(uint256 _id);
+    error NotAnEntity(address _sender);
 
+    mapping(uint256 => Zerti) public zerties; // id to Zerti
+    mapping(uint256 => uint256) public amount; // the amounts of tokens for each Zerti
+    mapping(address => mapping(uint256 => bool)) internal owners; // if owner has a specific Zerti
+    mapping(address => mapping(uint256 => bool)) internal pending; // if owner has pending a specific Zerti
+    mapping(address => bool) public validatedEntities;
 
-    mapping(uint256 => zerti) zerties; // id to Zerti
-    mapping(uint256 => uint256) amount;// the amounts of tokens for each Zerti
-    mapping(address => mapping(uint256 => bool)) owners;// if owner has a specific Zerti
-    mapping(address => mapping(uint256 => bool)) pending;// if owner has pending a specific Zerti
-
-    
-    function idInfo(uint id) external view returns(address, string memory){
+    function idInfo(uint256 id) external view returns (address, string memory) {
         return (zerties[id].owner, zerties[id].data);
     }
 
@@ -42,38 +43,59 @@ contract Zerti {
         return myzerti;
     }
     */
-    function mint(string calldata data) public {
-        //requiere be entity
-        zerties[++nonce] = zerti(msg.sender, data);
+
+    function mint(string calldata _data) external {
+        if(!validatedEntities[msg.sender])
+            revert NotAnEntity(msg.sender);
+        _mint(_data);
+    }
+
+    function _mint(string memory _data) internal {
+        zerties[++nonce] = Zerti(msg.sender, _data);
         amount[nonce] = 0;
     }
 
-    function transfer(uint256 id, address[] memory to) public {
-        if(zerties[id].owner != msg.sender) revert Unauthorized(msg.sender);
-        for(uint i = 0; i<to.length;){
-            address dest = to[i];
-            if(owners[dest][id] != false || pending[dest][id] )
-            require(owners[dest][id] == false);
-            require(pending[dest][id] == false);
-            pending[dest][id] = true;
-            unchecked{
+    function transfer(uint256 _id, address[] calldata _to) external {
+        if (zerties[_id].owner != msg.sender)
+            revert Unauthorized(msg.sender);
+        _transfer(_id, _to);
+    }
+
+    function _transfer(uint256 _id, address[] memory _to ) internal {
+        for (uint256 i = 0; i < _to.length; ) {
+            address dest = _to[i];
+            if (owners[dest][_id] != false)
+                revert AlreadyOwned();
+            if (pending[dest][_id] != false)
+                revert AlreadyInProccess();
+            pending[dest][_id] = true;
+            unchecked {
                 ++i;
             }
         }
     }
 
-    function claim(uint id) public{
-        require(owners[msg.sender][id] == false);
-        require(pending[msg.sender][id] == true);
-        owners[msg.sender][id] = true;
-        pending[msg.sender][id] = false;
-        amount[id]++;
+    function claim(uint256 _id) external {
+        if (owners[msg.sender][_id] != false || pending[msg.sender][_id] != true)
+            revert CanNotClaim(_id);
+        _claim(_id);
     }
 
-    function burn(uint256 id) public{
-        require(owners[msg.sender][id] == true);
-        owners[msg.sender][id] = false;
-        amount[id]--;
-
+    function _claim(uint256 _id) internal {
+        owners[msg.sender][_id] = true;
+        pending[msg.sender][_id] = false;
+        amount[_id]++;
     }
+
+    function burn(uint256 _id) external {
+        if(owners[msg.sender][_id] == true)
+            revert Unauthorized(msg.sender);
+        _burn(_id);
+    }
+
+    function _burn(uint256 _id) internal {
+        owners[msg.sender][_id] = false;
+        amount[_id]--;
+    }
+
 }
