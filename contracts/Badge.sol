@@ -28,8 +28,24 @@ contract EIPARAZI {
     error NotAnEntity(address _sender);
     error CeroZertisIn(uint256 _id);
 
+    event ZertiMinted(
+        address _entity,
+        uint256 _id
+    );
+
+    event ZertiTransfer(
+        address _from
+        address _to,
+        uint256 _id
+    );
+
     event ZertiClaimed(
         address _newOwner,
+        uint256 _id
+    );
+
+    event ZertiBurned(
+        address _owner,
         uint256 _id
     );
     
@@ -44,6 +60,7 @@ contract EIPARAZI {
     function _mint(string memory _data) internal {
         zerties[++nonce] = Zerti(msg.sender, _data);
         amount[nonce] = 0;
+        emit ZertiMinted(msg.sender, nonce);
     }
 
     function transfer(uint256 _id, address[] calldata _to) external {
@@ -60,6 +77,7 @@ contract EIPARAZI {
             if (pending[dest][_id] != false)
                 revert AlreadyAwaitingClaim(_id);
             pending[dest][_id] = true;
+            emit ZertiTransfer(msg.sender, dest, _id);
             unchecked {
                 ++i;
             }
@@ -90,6 +108,7 @@ contract EIPARAZI {
     function _burn(uint256 _id) internal {
         owners[msg.sender][_id] = false;
         amount[_id]--;
+        emit ZertiBurned(msg.sender, _id);
     }
 
     //View
