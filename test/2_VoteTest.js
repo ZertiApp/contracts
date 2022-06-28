@@ -63,7 +63,7 @@ describe("Vote.sol", function () {
     _votesInFavour++;
     _nVotes++;
 
-    await delay(500);
+    
     expect(await voteProxy.getVotesAgainst()).to.equal(_votesAgainst);
     expect(await voteProxy.getVotesInFavour()).to.equal(_votesInFavour);
     expect(await voteProxy.getUserVoted(owner.address)).to.equal(true);
@@ -122,7 +122,7 @@ describe("Vote.sol", function () {
     const voteFinalizationTx = await voteProxy.connect(owner).voteFinalization();
     await voteFinalizationTx.wait();
 
-    await delay(500);
+    
     expect(await voteProxy.getTotalDeposit()).to.equal(
       ethers.utils.parseEther("0.0")  //FIX DIVISION ERROR, SOLIDITY DOES NOT SUPPORT FLOATING POINT
     );

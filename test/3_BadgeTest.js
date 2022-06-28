@@ -6,16 +6,15 @@ function delay(ms) {
 }
 
 describe("Badge.sol", function () { 
-    it("Should mint tokens", function () {
+    it("Should mint tokens", async function () {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-        const Badge = await hre.ethers.getContractFactory("Badge");
+        const Badge = await hre.ethers.getContractFactory("EIPARAZI");
         const badge = await Badge.deploy();
 
         const mintTx = await badge.mint("ILUKIW");
         await mintTx.wait();
 
-        delay(500);
         expect(await badge.idInfo(0)).to.equal(owner.address, "ILUKIW", 0);  
     });
 });

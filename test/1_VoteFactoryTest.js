@@ -18,14 +18,12 @@ describe("VoteFactory.sol", function () {
     var changeImplTx = await vf.changeImpl(vote.address);
     await changeImplTx.wait();
 
-    await delay(500);
     expect(await vf.getImplAddr()).to.equal(vote.address); 
 
     const vote2 = await Vote.deploy();
     var changeImplTx = await vf.changeImpl(vote2.address);
     await changeImplTx.wait();
 
-    await delay(500);
     expect(await vf.getImplAddr()).to.equal(vote2.address); 
 
     /* console.log("       Vote1 address: " + vote.address);
@@ -51,19 +49,7 @@ describe("VoteFactory.sol", function () {
       proxyAddress = proxyAddress[0];
       const voteProxy = await hre.ethers.getContractAt("Vote", proxyAddress);   
     
-      createVoteTx = await vf.createVote(_votingCost,_minVotes,_timeToVote);
-      receipt = await createVoteTx.wait();
-      proxyAddress;
-      for (const event of receipt.events) {
-        proxyAddress = event.args;
-      }
-      proxyAddress = proxyAddress[0];
-      const voteProxy2 = await hre.ethers.getContractAt("Vote", proxyAddress);   
-
-      await delay(500);
       expect(await voteProxy.getInit()).to.equal(true);
-      expect(await voteProxy2.getInit()).to.equal(true);
-      expect(voteProxy.address).to.not.equal(voteProxy2.address); 
     });
 
     it("Should initialize variables correctly", async function () {
@@ -90,7 +76,7 @@ describe("VoteFactory.sol", function () {
       const _endDate = new Date(parseInt(await voteProxy.getEndTime())*1000); //Only check date, given that seconds will be different because of transaction await
       const _expectedEndDate = new Date(msNow +_timeToVote*24*60*60*1000); //ms Expected time = _timeToVote days * 24 h * 60 m * 60 s * 1 ms
 
-      await delay(500);
+      
       expect(_endDate.getDate()).to.equal(_expectedEndDate.getDate());
       _votingCost = (_votingCost.toString() + ".0");
       expect(await voteProxy.getVotingCost()).to.equal(ethers.utils.parseEther(_votingCost));

@@ -7,6 +7,8 @@
  */
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
+
 contract EIPARAZI {
 
     uint256 private nonce;
@@ -34,7 +36,7 @@ contract EIPARAZI {
     );
 
     event ZertiTransfer(
-        address _from
+        address _from,
         address _to,
         uint256 _id
     );
@@ -60,6 +62,7 @@ contract EIPARAZI {
     function _mint(string memory _data) internal {
         zerties[++nonce] = Zerti(msg.sender, _data);
         amount[nonce] = 0;
+        console.log("Zerti minted from %s, nonce: %s",msg.sender,nonce);
         emit ZertiMinted(msg.sender, nonce);
     }
 
