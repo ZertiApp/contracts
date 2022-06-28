@@ -6,21 +6,40 @@ function delay(ms) {
 }
 
 describe("Badge.sol", function () { 
-    it("Should mint tokens", async function () {
-        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+    let deployer, addr1, addr2, badge, addrs
+    beforeEach(async function () {
+        //Get contract factories
+        const Badge = await ethers.getContractFactory("EIPARAZI");
 
-        const Badge = await hre.ethers.getContractFactory("EIPARAZI");
-        const badge = await Badge.deploy();
-
-        const mintTx = await badge.mint("ILUKIW");
-        await mintTx.wait();
-
-        expect(await badge.idInfo(0)).to.equal(owner.address, "ILUKIW", 0);  
-        await expect(badge.mint("ILUKIW"))
+        //Get signers
+        [deployer, addr1, addr2, ...addrs] = await ethers.getSigners();
+        //Deploy contrats
+        badge = await Badge.deploy();
+    })
+    describe("Mint zerties", async function () {
+        it("SHould mint tokens", async function (){
+            await expect(badge.mint("ILUKIW"))
         .to.emit(badge, "ZertiMinted")
         .withArgs(
             owner.address,
             1,
         )
+        await expect(badge.mint("watafak"))
+        .to.emit(badge, "ZertiMinted")
+        .withArgs(
+            owner.address,
+            2,
+        )
+        await expect(badge.mint("grays anatomy"))
+        .to.emit(badge, "ZertiMinted")
+        .withArgs(
+            owner.address,
+            3,
+        )
+        })
+        
+        it("Testing idInfo()", async function(){
+            
+        })
     })
 })
