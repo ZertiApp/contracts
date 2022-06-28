@@ -16,5 +16,11 @@ describe("Badge.sol", function () {
         await mintTx.wait();
 
         expect(await badge.idInfo(0)).to.equal(owner.address, "ILUKIW", 0);  
-    });
-});
+        await expect(badge.mint("ILUKIW"))
+        .to.emit(badge, "ZertiMinted")
+        .withArgs(
+            owner.address,
+            1,
+        )
+    })
+})
