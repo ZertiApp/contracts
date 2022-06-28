@@ -50,6 +50,67 @@ contract EIPARAZI {
         address _owner,
         uint256 _id
     );
+
+    //View
+    function ownerOf(uint256 _id) external view returns(address){
+        return (zerties[_id].owner);
+    }
+
+    function uriOf(uint256 _id) external view returns(string memory){
+        return (zerties[_id].data);
+    }
+
+    function amountOf(uint256 _id) external view returns(a uint256){
+        return (amount[_id]);
+    }
+
+
+    function zertiesFrom(address _from) external view returns(uint256[] memory){
+        uint256 _tokenCount = 0;
+        for(uint256 i = 1; i<= nonce;){
+            if(owners[_from][i]){
+                unchecked{
+                    ++_tokenCount;
+                }         
+            }
+            unchecked{
+                ++i;
+            }
+        }
+        uint256[] memory _myZerties = new uint256[](_tokenCount);
+         for(uint i = 1; i<=nonce;){
+            if(owners[_from][i]){
+                _myZerties[--_tokenCount] = i;
+            }
+            unchecked{
+                ++i;
+            }
+        }
+        return _myZerties;
+    }
+
+    function pendingFrom(address _from) external view returns(uint256[] memory){
+        uint256 _tokenCount = 0;
+        for(uint256 i = 1; i<=nonce;){
+            if(pending[_from][i]){
+                ++_tokenCount;
+            }
+            unchecked{
+                ++i;
+            }
+        }
+        uint256[] memory _myZerties = new uint256[](_tokenCount);
+            for(uint256 i = 1; i<=nonce;){
+            if(pending[_from][i]){
+                _myZerties[--_tokenCount] = i;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        return _myZerties;
+    }
+
     
     //Function
     function mint(string calldata _data) external {
@@ -114,55 +175,5 @@ contract EIPARAZI {
         emit ZertiBurned(msg.sender, _id);
     }
 
-    //View
-    function idInfo(uint256 _id) external view returns(address, string memory, uint256){
-        return (zerties[_id].owner, zerties[_id].data, amount[_id]);
-    }
-
-    function zertiesFrom(address _from) external view returns(uint256[] memory){
-        uint256 _tokenCount = 0;
-        for(uint256 i = 1; i<= nonce;){
-            if(owners[_from][i]){
-                unchecked{
-                    ++_tokenCount;
-                }         
-            }
-            unchecked{
-                ++i;
-            }
-        }
-        uint256[] memory _myZerties = new uint256[](_tokenCount);
-         for(uint i = 1; i<=nonce;){
-            if(owners[_from][i]){
-                _myZerties[--_tokenCount] = i;
-            }
-            unchecked{
-                ++i;
-            }
-        }
-        return _myZerties;
-    }
-
-    function pendingFrom(address _from) external view returns(uint256[] memory){
-        uint256 _tokenCount = 0;
-        for(uint256 i = 1; i<=nonce;){
-            if(pending[_from][i]){
-                ++_tokenCount;
-            }
-            unchecked{
-                ++i;
-            }
-        }
-        uint256[] memory _myZerties = new uint256[](_tokenCount);
-            for(uint256 i = 1; i<=nonce;){
-            if(pending[_from][i]){
-                _myZerties[--_tokenCount] = i;
-            }
-            unchecked {
-                ++i;
-            }
-        }
-        return _myZerties;
-    }
-
+    
 }
