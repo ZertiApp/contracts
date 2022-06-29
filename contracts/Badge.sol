@@ -11,17 +11,17 @@ import "hardhat/console.sol";
 
 contract EIPARAZI {
 
+    struct Zerti {
+        address owner;
+        string data;
+    }
+
     uint256 private nonce;
     mapping(uint256 => Zerti) public zerties; // id to Zerti
     mapping(uint256 => uint256) public amount; // the amounts of tokens for each Zerti
     mapping(address => mapping(uint256 => bool)) internal owners; // if owner has a specific Zerti
     mapping(address => mapping(uint256 => bool)) internal pending; // if owner has pending a specific Zerti
     mapping(address => bool) public validatedEntities;
-
-    struct Zerti {
-        address owner;
-        string data;
-    }
 
     error Unauthorized(address _sender);
     error AlreadyOwned(uint256 _id);
@@ -113,6 +113,10 @@ contract EIPARAZI {
 
     
     //Function
+    /**
+     * @dev entity mints a zerti
+     * @param _data URI from the zerti
+     */
     function mint(string calldata _data) external {
         /*
         if(!validatedEntities[msg.sender])
@@ -128,6 +132,11 @@ contract EIPARAZI {
         emit ZertiMinted(_account, nonce);
     }
 
+    /**
+     * @dev mint a zerti
+     * @param _id the zerti id
+`````* @param _to the addresses that will be transfer the zerti
+     */
     function transfer(uint256 _id, address[] calldata _to) external {
         address account = msg.sender;
         if (zerties[_id].owner != account)
@@ -149,7 +158,10 @@ contract EIPARAZI {
             }
         }
     }
-
+    /**
+     * @dev user claims a zerti
+     * @param _id the zerti id
+     */
     function claim(uint256 _id) external {
         address account = msg.sender;
         if (owners[account][_id] != false || pending[account][_id] != true)
@@ -163,7 +175,10 @@ contract EIPARAZI {
         amount[_id]++;
         emit ZertiClaimed(_account, _id);
     }
-
+    /**
+     * @dev owner of zerti burns it
+     * @param _id the zerti id
+     */
     function burn(uint256 _id) external {
         address account = msg.sender();
         if(owners[account][_id] == true)
