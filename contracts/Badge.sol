@@ -117,11 +117,12 @@ contract EIPARAZI {
         /*
         if(!validatedEntities[msg.sender])
             //revert NotAnEntity(msg.sender); */
-        _mint(_data);
+        address acount = msg.sender;
+        _mint(account, _data);
     }
 
-    function _mint(string memory _data) internal {
-        zerties[++nonce] = Zerti(msg.sender, _data);
+    function _mint(address _account, string memory _data) internal {
+        zerties[++nonce] = Zerti(, _data);
         amount[nonce] = 0;
         console.log("Zerti minted from %s, nonce: %s",msg.sender,nonce);
         emit ZertiMinted(msg.sender, nonce);
