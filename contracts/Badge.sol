@@ -122,7 +122,7 @@ contract EIPARAZI {
     }
 
     function _mint(address _account, string memory _data) internal {
-        zerties[++nonce] = Zerti(, _data);
+        zerties[++nonce] = Zerti(_account, _data);
         amount[nonce] = 0;
         console.log("Zerti minted from %s, nonce: %s",msg.sender,nonce);
         emit ZertiMinted(msg.sender, nonce);

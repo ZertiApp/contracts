@@ -2,50 +2,30 @@
 
 /**
  * @title Badge contract
- * @author Zerti Team - Matias Arazi & Lucas Grasso Ramos
+ * @author Matias Arazi & Lucas Grasso Ramos
  * @notice MultiSig, Semi-Fungible, SoulBound Token standard for academic certification.
  */
 
 pragma solidity ^0.8.4;
 
 import "./utils.sol";
+import "./IMSSBT.sol";
 
-contract MSSBT is Context {
+contract MSSBT is Context, IMSSBT {
+
+    struct MotherCertificate {
+        address owner;
+        string data; //URL to IPFS with SBT data
+    }
 
     uint256 private nonce;
     mapping(uint256 => MotherCertificate) public certifications; 
     mapping(uint256 => uint256) public amounts; 
     mapping(address => mapping(uint256 => bool)) internal owners; 
     mapping(address => mapping(uint256 => bool)) internal pending; 
-
-    struct MotherCertificate {
-        address owner;
-        string data;
-    }
-
-    event Minted(
-        address _entity,
-        uint256 _id
-    );
-
-    event Transfer(
-        address _from,
-        address _to,
-        uint256 _id
-    );
-
-    event Claimed(
-        address _newOwner,
-        uint256 _id
-    );
-
-    event Burned(
-        address _owner,
-        uint256 _id
-    );
     
     //Function
-    function mint(string calldata _data) external virtual returns (bool){
+    function mint(string calldata _data) public virtual returns (bool){
         address minter = _msgSender();
         _beforeTokenTransfer(minter, minter, 1);
         _mint(minter, _data);
@@ -57,10 +37,10 @@ contract MSSBT is Context {
         require(account != address(0), "MSSBT: minter is zero address");
         certifications[++nonce] = MotherCertificate(account, _data);
         amounts[nonce] = 0;
-        emit Minted(account, nonce);
+        emit Transfer(address(0), account, nonce);
     }
 
-     function transfer(uint256 _id, address _to) external virtual returns (bool) {
+     function transfer(uint256 _id, address _to) external virtual override returns (bool) {
         address from = _msgSender();
         _beforeTokenTransfer(from, _to , 1);
         _transfer(from, _id, _to);
@@ -74,7 +54,7 @@ contract MSSBT is Context {
         emit Transfer(_from, _to, _id);
     }
 
-    function multiTransfer(uint256 _id, address[] memory _to) external virtual returns (bool) {
+    function multiTransfer(uint256 _id, address[] memory _to) external virtual override returns (bool) {
         address from = _msgSender();
         _multiTransfer(from, _id, _to);
         return true;
@@ -83,16 +63,15 @@ contract MSSBT is Context {
     function _multiTransfer(address _from, uint256 _id, address[] memory _to ) internal virtual {
         require(certifications[_id].owner == _from, "MSSBT: Unauthorized");
         for (uint256 i = 0; i < _to.length; ) {
-            address dest = _to[i];
-            require(owners[dest][_id] == false,"MSSBT: Already Owned");
-            require(pending[dest][_id] == false,"MSSBT: Already to be claimed");
-            _beforeTokenTransfer(_from, dest , _to.length);
-            pending[dest][_id] = true;
-            emit Transfer(_from, dest, _id);
-            _afterTokenTransfer(_from, dest, _to.length);
+            address _dest = _to[i];
+            require(owners[_dest][_id] == false,"MSSBT: Already Owned");
+            require(pending[_dest][_id] == false,"MSSBT: Already to be claimed");
+            _beforeTokenTransfer(_from, _dest , _to.length);
+            _transfer(_from, _id, _dest);
+            _afterTokenTransfer(_from, _dest, _to.length);
             unchecked {++i;}
         }
-    }
+    } 
 
     function claim(uint256 _id) external virtual returns (bool) {
         address claimer = _msgSender();
@@ -124,7 +103,7 @@ contract MSSBT is Context {
         require(amounts[_id] > 0, "MSSBT: Cero Certificates");
         owners[account][_id] = false;
         amounts[_id]--;
-        emit Burned(account, _id);
+        emit Transfer(account, address(0), _id);
     }
 
     /**
@@ -145,15 +124,16 @@ contract MSSBT is Context {
         address to,
         uint256 amount
     ) internal virtual {}
+
     /**
-     * @dev Hook that is called before any claim.
+     * @dev Hook that is called before any token claim.
      */
     function _beforeTokenClaim(
         address newOwner,
         uint256 id
     ) internal virtual {}
     /**
-     * @dev Hook that is called after any claim.
+     * @dev Hook that is called after any token claim.
      */
     function _afterTokenClaim(
         address newOwner,
