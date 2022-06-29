@@ -11,17 +11,17 @@ import "hardhat/console.sol";
 
 contract EIPARAZI {
 
-    struct Zerti {
-        address owner;
-        string data;
-    }
-
     uint256 private nonce;
     mapping(uint256 => Zerti) public zerties; // id to Zerti
     mapping(uint256 => uint256) public amount; // the amounts of tokens for each Zerti
     mapping(address => mapping(uint256 => bool)) internal owners; // if owner has a specific Zerti
     mapping(address => mapping(uint256 => bool)) internal pending; // if owner has pending a specific Zerti
     mapping(address => bool) public validatedEntities;
+
+    struct Zerti {
+        address owner;
+        string data;
+    }
 
     error Unauthorized(address _sender);
     error AlreadyOwned(uint256 _id);
@@ -52,37 +52,19 @@ contract EIPARAZI {
     );
 
     //View
-    /**
-    * @dev gets the entity of a zerti
-    * @param _id the id of the zerti
-    * @return the address of the owner
-    */
     function ownerOf(uint256 _id) external view returns(address){
         return (zerties[_id].owner);
     }
 
-    /**
-    * @dev gets the uri of a zerti
-    * @param _id the id of the zerti
-    * @return the uri of the zerti
-    */
     function uriOf(uint256 _id) external view returns(string memory){
         return (zerties[_id].data);
     }
-    /**
-    * @dev gets the amount of a zerti
-    * @param _id the id of the zerti
-    * @return the amount of the zerti
-    */
-    function amountOf(uint256 _id) external view returns(uint256){
+
+    function amountOf(uint256 _id) external view returns(a uint256){
         return (amount[_id]);
     }
 
-    /**
-    * @dev gets the zertis of an address
-    * @param _from an address
-    * @return the zertis that _from has
-    */
+
     function zertiesFrom(address _from) external view returns(uint256[] memory){
         uint256 _tokenCount = 0;
         for(uint256 i = 1; i<= nonce;){
@@ -131,38 +113,28 @@ contract EIPARAZI {
 
     
     //Function
-    /**
-     * @dev entity mints a zerti
-     * @param _data URI from the zerti
-     */
     function mint(string calldata _data) external {
         /*
         if(!validatedEntities[msg.sender])
             //revert NotAnEntity(msg.sender); */
-        address minter = msg.sender;
-        _mint(minter, _data);
+        address acount = msg.sender;
+        _mint(account, _data);
     }
 
     function _mint(address _account, string memory _data) internal {
         zerties[++nonce] = Zerti(_account, _data);
         amount[nonce] = 0;
-        console.log("Zerti minted from %s, nonce: %s",_account,nonce);
-        emit ZertiMinted(_account, nonce);
+        console.log("Zerti minted from %s, nonce: %s",msg.sender,nonce);
+        emit ZertiMinted(msg.sender, nonce);
     }
 
-    /**
-     * @dev mint a zerti
-     * @param _id the zerti id
-`````* @param _to the addresses that will be transfer the zerti
-     */
     function transfer(uint256 _id, address[] calldata _to) external {
-        address account = msg.sender;
-        if (zerties[_id].owner != account)
-            revert Unauthorized(account);
-        _transfer(account, _id, _to);
+        if (zerties[_id].owner != msg.sender)
+            revert Unauthorized(msg.sender);
+        _transfer(_id, _to);
     }
 
-    function _transfer(address _from, uint256 _id, address[] memory _to ) internal {
+    function _transfer(uint256 _id, address[] memory _to ) internal {
         for (uint256 i = 0; i < _to.length; ) {
             address dest = _to[i];
             if (owners[dest][_id] != false)
@@ -170,46 +142,38 @@ contract EIPARAZI {
             if (pending[dest][_id] != false)
                 revert AlreadyAwaitingClaim(_id);
             pending[dest][_id] = true;
-            emit ZertiTransfer(_from, dest, _id);
+            emit ZertiTransfer(msg.sender, dest, _id);
             unchecked {
                 ++i;
             }
         }
     }
-    /**
-     * @dev user claims a zerti
-     * @param _id the zerti id
-     */
+
     function claim(uint256 _id) external {
-        address account = msg.sender;
-        if (owners[account][_id] != false || pending[account][_id] != true)
+        if (owners[msg.sender][_id] != false || pending[msg.sender][_id] != true)
             revert CanNotClaim(_id);
-        _claim(account, _id);
+        _claim(_id);
     }
 
-    function _claim(address _account, uint256 _id) internal {
-        owners[_account][_id] = true;
-        pending[_account][_id] = false;
+    function _claim(uint256 _id) internal {
+        owners[msg.sender][_id] = true;
+        pending[msg.sender][_id] = false;
         amount[_id]++;
-        emit ZertiClaimed(_account, _id);
+        emit ZertiClaimed(msg.sender, _id);
     }
-    /**
-     * @dev owner of zerti burns it
-     * @param _id the zerti id
-     */
+
     function burn(uint256 _id) external {
-        address account = msg.sender;
-        if(owners[account][_id] == true)
-            revert Unauthorized(account);
+        if(owners[msg.sender][_id] == true)
+            revert Unauthorized(msg.sender);
         if(amount[_id] <= 0)
             revert CeroZertisIn(_id);
-        _burn(account, _id);
+        _burn(_id);
     }
 
-    function _burn(address _account, uint256 _id) internal {
-        owners[_account][_id] = false;
+    function _burn(uint256 _id) internal {
+        owners[msg.sender][_id] = false;
         amount[_id]--;
-        emit ZertiBurned(_account, _id);
+        emit ZertiBurned(msg.sender, _id);
     }
 
     
