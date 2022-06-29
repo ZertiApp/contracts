@@ -117,23 +117,25 @@ contract EIPARAZI {
         /*
         if(!validatedEntities[msg.sender])
             //revert NotAnEntity(msg.sender); */
-        _mint(_data);
+        address minter = msg.sender;
+        _mint(minetr, _data);
     }
 
-    function _mint(string memory _data) internal {
-        zerties[++nonce] = Zerti(msg.sender, _data);
+    function _mint(address _account, string memory _data) internal {
+        zerties[++nonce] = Zerti(account, _data);
         amount[nonce] = 0;
-        console.log("Zerti minted from %s, nonce: %s",msg.sender,nonce);
-        emit ZertiMinted(msg.sender, nonce);
+        console.log("Zerti minted from %s, nonce: %s",_account,nonce);
+        emit ZertiMinted(_account, nonce);
     }
 
     function transfer(uint256 _id, address[] calldata _to) external {
-        if (zerties[_id].owner != msg.sender)
-            revert Unauthorized(msg.sender);
-        _transfer(_id, _to);
+        address account = msg.sender;
+        if (zerties[_id].owner != account)
+            revert Unauthorized(account);
+        _transfer(account, _id, _to);
     }
 
-    function _transfer(uint256 _id, address[] memory _to ) internal {
+    function _transfer(address _from, uint256 _id, address[] memory _to ) internal {
         for (uint256 i = 0; i < _to.length; ) {
             address dest = _to[i];
             if (owners[dest][_id] != false)
@@ -141,7 +143,7 @@ contract EIPARAZI {
             if (pending[dest][_id] != false)
                 revert AlreadyAwaitingClaim(_id);
             pending[dest][_id] = true;
-            emit ZertiTransfer(msg.sender, dest, _id);
+            emit ZertiTransfer(_from, dest, _id);
             unchecked {
                 ++i;
             }
@@ -149,30 +151,32 @@ contract EIPARAZI {
     }
 
     function claim(uint256 _id) external {
-        if (owners[msg.sender][_id] != false || pending[msg.sender][_id] != true)
+        address account = msg.sender;
+        if (owners[account][_id] != false || pending[account][_id] != true)
             revert CanNotClaim(_id);
-        _claim(_id);
+        _claim(account, _id);
     }
 
-    function _claim(uint256 _id) internal {
-        owners[msg.sender][_id] = true;
-        pending[msg.sender][_id] = false;
+    function _claim(address _account, uint256 _id) internal {
+        owners[_account][_id] = true;
+        pending[_account][_id] = false;
         amount[_id]++;
-        emit ZertiClaimed(msg.sender, _id);
+        emit ZertiClaimed(_account, _id);
     }
 
     function burn(uint256 _id) external {
-        if(owners[msg.sender][_id] == true)
-            revert Unauthorized(msg.sender);
+        address account = msg.sender();
+        if(owners[account][_id] == true)
+            revert Unauthorized(account);
         if(amount[_id] <= 0)
             revert CeroZertisIn(_id);
-        _burn(_id);
+        _burn(account, _id);
     }
 
-    function _burn(uint256 _id) internal {
-        owners[msg.sender][_id] = false;
+    function _burn(address _account, uint256 _id) internal {
+        owners[_account][_id] = false;
         amount[_id]--;
-        emit ZertiBurned(msg.sender, _id);
+        emit ZertiBurned(_account, _id);
     }
 
     
