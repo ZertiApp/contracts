@@ -52,19 +52,37 @@ contract EIPARAZI {
     );
 
     //View
+    /**
+    * @dev gets the entity of a zerti
+    * @param _id the id of the zerti
+    * @return the address of the owner
+    */
     function ownerOf(uint256 _id) external view returns(address){
         return (zerties[_id].owner);
     }
 
+    /**
+    * @dev gets the uri of a zerti
+    * @param _id the id of the zerti
+    * @return the uri of the zerti
+    */
     function uriOf(uint256 _id) external view returns(string memory){
         return (zerties[_id].data);
     }
-
-    function amountOf(uint256 _id) external view returns(a uint256){
+    /**
+    * @dev gets the amount of a zerti
+    * @param _id the id of the zerti
+    * @return the amount of the zerti
+    */
+    function amountOf(uint256 _id) external view returns(uint256){
         return (amount[_id]);
     }
 
-
+    /**
+    * @dev gets the zertis of an address
+    * @param _from an address
+    * @return the zertis that _from has
+    */
     function zertiesFrom(address _from) external view returns(uint256[] memory){
         uint256 _tokenCount = 0;
         for(uint256 i = 1; i<= nonce;){
@@ -122,11 +140,11 @@ contract EIPARAZI {
         if(!validatedEntities[msg.sender])
             //revert NotAnEntity(msg.sender); */
         address minter = msg.sender;
-        _mint(minetr, _data);
+        _mint(minter, _data);
     }
 
     function _mint(address _account, string memory _data) internal {
-        zerties[++nonce] = Zerti(account, _data);
+        zerties[++nonce] = Zerti(_account, _data);
         amount[nonce] = 0;
         console.log("Zerti minted from %s, nonce: %s",_account,nonce);
         emit ZertiMinted(_account, nonce);
@@ -180,7 +198,7 @@ contract EIPARAZI {
      * @param _id the zerti id
      */
     function burn(uint256 _id) external {
-        address account = msg.sender();
+        address account = msg.sender;
         if(owners[account][_id] == true)
             revert Unauthorized(account);
         if(amount[_id] <= 0)
