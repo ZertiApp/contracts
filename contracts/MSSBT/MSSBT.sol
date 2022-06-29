@@ -25,7 +25,7 @@ contract MSSBT is Context, IMSSBT {
     mapping(address => mapping(uint256 => bool)) internal pending; 
     
     //Function
-    function mint(string calldata _data) public virtual returns (bool){
+    function mint(string calldata _data) public virtual returns (bool) {
         address minter = _msgSender();
         _beforeTokenTransfer(minter, minter, 1);
         _mint(minter, _data);
