@@ -17,8 +17,8 @@ describe("Badge.sol", function () {
         badge = await Badge.deploy();
     })
     describe("Mint zerties", async function () {
-        it("SHould mint tokens", async function (){
-            await expect(badge.mint("ILUKIW"))
+        it("Should mint tokens", async function (){
+            await expect(badge.mint('ILUKIW'))
         .to.emit(badge, "ZertiMinted")
         .withArgs(
             owner.address,
@@ -38,8 +38,14 @@ describe("Badge.sol", function () {
         )
         })
         
-        it("Testing idInfo()", async function(){
-            
+        it("Info of zerties ", async function(){
+            expect( await badge.uriOf(1)).to.equal('ILUKIW')
+            expect( await badge.uriOf(2)).to.equal("watafak")
+            expect( await badge.uriOf(3)).to.equal("grays anatomy")
+
+            expect(await badge.amountOf(1)).to.equal(0)
+            expect(await badge.amountOf(2)).to.equal(0)
+            expect(await badge.amountOf(3)).to.equal(0)
         })
     })
 })
