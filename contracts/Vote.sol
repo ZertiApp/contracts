@@ -9,11 +9,17 @@ pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
 
+interface IVF {
+    function addEntity(
+        address _newEntity
+    ) external;
+}
+
 contract Vote {
     //Variables & init
     bool internal isInitialized = false;
     address internal sender;
-    address internal voteFactory; //declare as constant.
+    address internal VOTEFACTORY; //declare as constant.
     uint256 internal votingCost; //IF votingCost == 0, voting is Closed, avoids using 1 word of storage.
     uint256 internal minVotes;
     uint256 internal endTime;
@@ -70,7 +76,7 @@ contract Vote {
         address _sender
     ) external {
         /*
-        if (msg.sender != voteFactory || isInitialized)
+        if (msg.sender != VOTEFACTORY || isInitialized)
             revert CantInit(msg.sender);
         */
         if (isInitialized)
@@ -119,7 +125,8 @@ contract Vote {
                 address(this).balance / voters1Len,
                 voters[1],
                 voters1Len
-            );
+            ); 
+            IVF(VOTEFACTORY).addEntity(sender);
             emit VoteFinished(sender, 1);
         } else if (voters0Len > voters1Len) {
             //Voters 0 > Voters 1

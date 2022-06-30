@@ -8,7 +8,7 @@ import "hardhat/console.sol";
  * @notice interface to interact with cloned Vote contracts.
  * @dev Used to call the initialize() function given that cloned contracts can't have constructors.
  */
-interface VoteInit {
+interface Vote {
     function initialize(
         uint256 _votingCost,
         uint256 _minVotes,
@@ -21,6 +21,8 @@ contract VoteFactory is MinimalProxy {
     address internal immutable admin;
     address internal voteImpl; //Adress of the vote contract to be cloned
     mapping(address => bool) public postulations;
+    mapping(address => bool) public clones;
+    mapping(address => bool) public entities;
 
     /**
      * @dev custom errors
@@ -30,7 +32,7 @@ contract VoteFactory is MinimalProxy {
         uint256 _minVotes,
         uint256 _timeToVote
     );
-    error unauthorized(address _sender);
+    error Unauthorized(address _sender);
     error AlreadyPostulated(address _sender);
     error InvalidAmount(uint256 _amount);
     error AlreadySelectedAsEntity(address _sender);
@@ -45,7 +47,7 @@ contract VoteFactory is MinimalProxy {
     }
 
     modifier onlyAdmin() {
-        if (msg.sender != admin) revert unauthorized(msg.sender);
+        if (msg.sender != admin) revert Unauthorized(msg.sender);
         _;
     }
 
@@ -79,7 +81,7 @@ contract VoteFactory is MinimalProxy {
 
         console.log("Proxy created at address: %s", _voteProxy);
 
-        VoteInit(_voteProxy).initialize(
+        Vote(_voteProxy).initialize(
             _votingCost,
             _minVotes,
             _timeToVote,
@@ -87,6 +89,7 @@ contract VoteFactory is MinimalProxy {
         );
 
         postulations[msg.sender] = true;
+        clones[_voteProxy] = true;
     }
 
     /**
@@ -99,7 +102,15 @@ contract VoteFactory is MinimalProxy {
             revert InvalidAmount(msg.value);
         
         postulations[msg.sender] = false;
-    } 
+    }
+
+    function addEntity(address _newEntity) external {
+        if(clones[msg.sender] != true)
+            revert Unauthorized(msg.sender);
+        entities[_newEntity] = true;
+    }
+
+
 
     /**
      * @dev  Fallbacks functions
@@ -124,5 +135,13 @@ contract VoteFactory is MinimalProxy {
      */
     function getAdmin() external view returns (address) {
         return admin;
+    }
+
+    /**
+     * @dev get if address can emit zertis
+     * @return bool stating if address can emit contracts
+     */
+    function isEntity(address _addr) external view returns (bool) {
+        return entities[_addr];
     }
 }
