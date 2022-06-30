@@ -30,11 +30,6 @@ contract EIPARAZI {
     error NotAnEntity(address _sender);
     error CeroZertisIn(uint256 _id);
 
-    event ZertiMinted(
-        address _entity,
-        uint256 _id
-    );
-
     event ZertiTransfer(
         address _from,
         address _to,
@@ -43,16 +38,7 @@ contract EIPARAZI {
 
     event ZertiClaimed(
         address _newOwner,
-        uint256 _id
-    );
-
-    event ZertiRejected(
-        address _newOwner,
-        uint256 _id
-    );
-
-    event ZertiBurned(
-        address _owner,
+        bool claimed,
         uint256 _id
     );
 
@@ -122,15 +108,14 @@ contract EIPARAZI {
         /*
         if(!validatedEntities[msg.sender])
             //revert NotAnEntity(msg.sender); */
-        address acount = msg.sender;
-        _mint(account, _data);
+        _mint(msg.sender, _data);
     }
 
     function _mint(address _account, string memory _data) internal {
         zerties[++nonce] = Zerti(_account, _data);
         amount[nonce] = 0;
         console.log("Zerti minted from %s, nonce: %s",msg.sender,nonce);
-        emit ZertiMinted(msg.sender, nonce);
+        emit ZertiTransfer(0,msg.sender, nonce);
     }
 
     function transfer(uint256 _id, address[] calldata _to) external {
@@ -164,7 +149,7 @@ contract EIPARAZI {
         owners[account][_id] = true;
         pending[account][_id] = false;
         amount[_id]++;
-        emit ZertiClaimed(account, _id);
+        emit ZertiClaimed(account, true, _id);
     }
 
     function reject(uint256 _id) external {
@@ -176,7 +161,7 @@ contract EIPARAZI {
     function _reject(address account, uint256 _id) internal {
         owners[account][_id] = false;
         pending[account][_id] = false;
-        emit ZertiRejected(account, _id);
+        emit ZertiRejected(account, false, _id);
     }
 
     function burn(uint256 _id) external {
@@ -190,7 +175,7 @@ contract EIPARAZI {
     function _burn(uint256 _id) internal {
         owners[msg.sender][_id] = false;
         amount[_id]--;
-        emit ZertiBurned(msg.sender, _id);
+        emit ZertiTransfer(msg.sender, 0, _id);
     }
 
     
