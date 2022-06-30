@@ -26,7 +26,7 @@ contract EIPARAZI {
     error Unauthorized(address _sender);
     error AlreadyOwned(uint256 _id);
     error AlreadyAwaitingClaim(uint256 _id);
-    error CanNotClaim(uint256 _id);
+    error NotEligableToClaim(uint256 _id);
     error NotAnEntity(address _sender);
     error CeroZertisIn(uint256 _id);
 
@@ -46,6 +46,11 @@ contract EIPARAZI {
         uint256 _id
     );
 
+    event ZertiRejected(
+        address _newOwner,
+        uint256 _id
+    );
+
     event ZertiBurned(
         address _owner,
         uint256 _id
@@ -60,7 +65,7 @@ contract EIPARAZI {
         return (zerties[_id].data);
     }
 
-    function amountOf(uint256 _id) external view returns(a uint256){
+    function amountOf(uint256 _id) external view returns(uint256){
         return (amount[_id]);
     }
 
@@ -151,15 +156,27 @@ contract EIPARAZI {
 
     function claim(uint256 _id) external {
         if (owners[msg.sender][_id] != false || pending[msg.sender][_id] != true)
-            revert CanNotClaim(_id);
-        _claim(_id);
+            revert NotEligableToClaim(_id);
+        _claim(msg.sender, _id);
     }
 
-    function _claim(uint256 _id) internal {
-        owners[msg.sender][_id] = true;
-        pending[msg.sender][_id] = false;
+    function _claim(address account, uint256 _id) internal {
+        owners[account][_id] = true;
+        pending[account][_id] = false;
         amount[_id]++;
-        emit ZertiClaimed(msg.sender, _id);
+        emit ZertiClaimed(account, _id);
+    }
+
+    function reject(uint256 _id) external {
+        if (owners[msg.sender][_id] != false || pending[msg.sender][_id] != true)
+            revert NotEligableToClaim(_id);
+        _reject(msg.sender, _id);
+    }
+
+    function _reject(address account, uint256 _id) internal {
+        owners[account][_id] = false;
+        pending[account][_id] = false;
+        emit ZertiRejected(account, _id);
     }
 
     function burn(uint256 _id) external {
