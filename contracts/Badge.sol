@@ -19,7 +19,7 @@ contract EIPARAZI {
     mapping(address => bool) public validatedEntities;
 
     struct Zerti {
-        address owner;
+        address entity;
         string data;
     }
 
@@ -44,7 +44,7 @@ contract EIPARAZI {
 
     //View
     function ownerOf(uint256 _id) external view returns(address){
-        return (zerties[_id].owner);
+        return (zerties[_id].entity);
     }
 
     function uriOf(uint256 _id) external view returns(string memory){
@@ -115,11 +115,11 @@ contract EIPARAZI {
         zerties[++nonce] = Zerti(_account, _data);
         amount[nonce] = 0;
         console.log("Zerti minted from %s, nonce: %s",msg.sender,nonce);
-        emit ZertiTransfer(0,msg.sender, nonce);
+        emit ZertiTransfer(address(0),msg.sender, nonce);
     }
 
     function transfer(uint256 _id, address[] calldata _to) external {
-        if (zerties[_id].owner != msg.sender)
+        if (zerties[_id].entity != msg.sender)
             revert Unauthorized(msg.sender);
         _transfer(_id, _to);
     }
@@ -161,7 +161,7 @@ contract EIPARAZI {
     function _reject(address account, uint256 _id) internal {
         owners[account][_id] = false;
         pending[account][_id] = false;
-        emit ZertiRejected(account, false, _id);
+        emit ZertiClaimed(account, false, _id);
     }
 
     function burn(uint256 _id) external {
@@ -175,7 +175,7 @@ contract EIPARAZI {
     function _burn(uint256 _id) internal {
         owners[msg.sender][_id] = false;
         amount[_id]--;
-        emit ZertiTransfer(msg.sender, 0, _id);
+        emit ZertiTransfer(msg.sender, address(0), _id);
     }
 
     

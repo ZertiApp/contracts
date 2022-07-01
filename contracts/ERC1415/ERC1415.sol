@@ -9,7 +9,7 @@
 pragma solidity ^0.8.4;
 
 import "./IERC1415.sol";
-import "@openzeppelin\contracts\utils\Context.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
 contract ERC1415 is IERC1415, Context {
 
