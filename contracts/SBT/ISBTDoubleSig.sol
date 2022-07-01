@@ -5,7 +5,7 @@ pragma solidity ^0.8.4;
 /**
  * @dev Interface of the MSSBT
  */
-interface IERC1415 {
+interface ISBTDoubleSig {
 
     //View
     function ownerOf(uint256 _id) external view returns(address){

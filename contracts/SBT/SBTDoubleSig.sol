@@ -8,10 +8,10 @@
 
 pragma solidity ^0.8.4;
 
-import "./IERC1415.sol";
+import "./ISBTDoubleSig.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-contract ERC1415 is IERC1415, Context {
+contract SBTDoubleSig is IERC1415, Context {
 
     uint256 private nonce;
     mapping(uint256 => Token) public tokens; // id to Token

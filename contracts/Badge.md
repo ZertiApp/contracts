@@ -21,7 +21,7 @@
 * __Pending:__ stores the pending Zerties of each account
 
 ### **Functions:**
-importar de l
+importar del code
 
 
 
