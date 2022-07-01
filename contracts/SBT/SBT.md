@@ -1,7 +1,7 @@
 ---
 eip: <to be assigned>
-title: <SFSBT>
-description: <Semi-fungible SBT (SoulBourn Token)>
+title: <SFDSSBT>
+description: <Semi-fungible, DoubleSig SBT (SoulBourn Token)>
 author: Matias Arazi ((@MatiArazi)[https://github.com/MatiArazi]), Lucas Grasso Ramos ((@LucasGrasso)[https://github.com/LucasGrasso]),
 discussions-to: <URL>
 status: Draft
