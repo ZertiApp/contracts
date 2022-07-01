@@ -67,23 +67,36 @@ interface ISBTDoubleSig {
     function pendingFrom(address _from) external view returns(uint256[] memory);
 
     /**
-     * @dev Transfers `tokenId` token from `from` to `to`.
+     * @dev Transfers `_tokenId` token from `_from` to `_to`.
      *
      * Requirements:
      *
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     * - pending[_to][_id] MUST be false
-     * - `to` cannot own a token under _tokenId at call.
+     * - `_from` cannot be the zero address.
+     * - `_to` cannot be the zero address.
+     * `_to` MUST NOT have a pending token under `tokenId`.
+     * `_from` Must be the minter(owner before assigning `_tokenId` as pending to `_to` ) of `_tokenId`
+     * - `_to` cannot own a token under _tokenId at call.
+     *
      * Emits a {TokenTransfer} event.
+     *
+     * @return bool stating opperation success
      */
-    function transfer(address _from, uint256 id , address to) external returns (bool);
+    function transfer(address _from, uint256 _id , address _to) external returns (bool);
 
+    /**
+     * @dev Transfers `_tokenId` token from `_from` to `_to[]`.
+     *
+     * Requirements: See {transfer}
+     *
+     * Calls _transfer len(_to) times
+     *
+     * Emits a {TokenTransfer} event len(_to) times.
+     *
+     * @return bool stating opperation success
+     */
     function transferBatch(
-        uint256 id,
-        address[] memory to
+        address _from,
+        uint256 _id,
+        address[] memory _to
     ) external returns (bool);
-
-    
-
 }

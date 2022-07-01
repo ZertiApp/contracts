@@ -10,11 +10,11 @@ pragma solidity ^0.8.4;
 
 import "./ISBTDoubleSig.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+
 /* import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol"; */
 
 contract SBTDoubleSig is Context, ISBTDoubleSig {
-
     uint256 private nonce;
     // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
     string private _uri;
@@ -34,7 +34,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     constructor(string memory uri_) {
         _setURI(uri_);
     }
-    
+
     error NotOwner(address _sender);
     error AlreadyOwned(address _account, uint256 _id);
     error AlreadyPending(address _account, uint256 _id);
@@ -60,45 +60,69 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     /**
      * @dev See {ISBTDOubleSig-ownerOf}.
      */
-    function ownerOf(uint256 _id) external view virtual override returns(address) {
+    function ownerOf(uint256 _id)
+        external
+        view
+        virtual
+        override
+        returns (address)
+    {
         return (tokens[_id].owner);
     }
 
     /**
      * @dev See {ISBTDOubleSig-uriOf}.
      */
-    function uriOf(uint256 _id) external view virtual override returns(string memory){
+    function uriOf(uint256 _id)
+        external
+        view
+        virtual
+        override
+        returns (string memory)
+    {
         return (tokens[_id].data);
     }
 
     /**
      * @dev See {ISBTDOubleSig-amountOf}.
      */
-    function amountOf(uint256 _id) external view virtual override returns(uint256){
+    function amountOf(uint256 _id)
+        external
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return (amount[_id]);
     }
 
     /**
      * @dev See {ISBTDOubleSig-tokensFrom}.
      */
-    function tokensFrom(address _from) external view virtual override returns(uint256[] memory) {
+    function tokensFrom(address _from)
+        external
+        view
+        virtual
+        override
+        returns (uint256[] memory)
+    {
         uint256 _tokenCount = 0;
-        for(uint256 i = 1; i<= nonce;){
-            if(balanceOf[_from][i]){
-                unchecked{
+        for (uint256 i = 1; i <= nonce; ) {
+            if (balanceOf[_from][i]) {
+                unchecked {
                     ++_tokenCount;
-                }         
+                }
             }
-            unchecked{
+            unchecked {
                 ++i;
             }
         }
         uint256[] memory _ownedTokens = new uint256[](_tokenCount);
-         for(uint i = 1; i<=nonce;){
-            if(balanceOf[_from][i]){
+        for (uint256 i = 1; i <= nonce; ) {
+            if (balanceOf[_from][i]) {
                 _ownedTokens[--_tokenCount] = i;
             }
-            unchecked{
+            unchecked {
                 ++i;
             }
         }
@@ -108,19 +132,25 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     /**
      * @dev See {ISBTDOubleSig-pendingFrom}.
      */
-    function pendingFrom(address _from) external view virtual override returns(uint256[] memory){
+    function pendingFrom(address _from)
+        external
+        view
+        virtual
+        override
+        returns (uint256[] memory)
+    {
         uint256 _tokenCount = 0;
-        for(uint256 i = 1; i<=nonce;){
-            if(pending[_from][i]){
+        for (uint256 i = 1; i <= nonce; ) {
+            if (pending[_from][i]) {
                 ++_tokenCount;
             }
-            unchecked{
+            unchecked {
                 ++i;
             }
         }
         uint256[] memory _pendingTokens = new uint256[](_tokenCount);
-            for(uint256 i = 1; i<=nonce;){
-            if(pending[_from][i]){
+        for (uint256 i = 1; i <= nonce; ) {
+            if (pending[_from][i]) {
                 _pendingTokens[--_tokenCount] = i;
             }
             unchecked {
@@ -130,71 +160,95 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
         return _pendingTokens;
     }
 
-
     function _setURI(string memory newuri) internal virtual {
         _uri = newuri;
     }
 
-    /** 
-    *@dev mints a token extrarnally
-    *@param _data the uri of the token
-    */
+    /**
+     *@dev mints a token extrarnally
+     *@param _data the uri of the token
+     */
     function mint(string calldata _data) external virtual {
         address minter = _msgSender();
         _mint(minter, _data);
     }
 
     /**
-    *@dev mints a token internally
-    *@param _account address who will mint the token
-    *@param _data the uri of the token
-    */
+     *@dev mints a token internally
+     *@param _account address who will mint the token
+     *@param _data the uri of the token
+     */
     function _mint(address _account, string memory _data) internal virtual {
-        unchecked{++nonce;}
-        _beforeTokenTransfer(address(0),_account, nonce, 0);
+        unchecked {
+            ++nonce;
+        }
+        _beforeTokenTransfer(address(0), _account, nonce, 0);
         tokens[nonce] = Token(_account, _data);
         amount[nonce] = 0;
-        emit TokenTransfer(address(0),msg.sender, nonce);
-        _afterTokenTransfer(address(0),_account, nonce, 0);
+        emit TokenTransfer(address(0), msg.sender, nonce);
+        _afterTokenTransfer(address(0), _account, nonce, 0);
     }
 
-    function transfer(uint256 _id, address _to) external virtual override returns(bool) {
+    /**
+     * @dev see {ISBTDOubleSig-transfer}
+     */
+    function transfer(uint256 _id, address _to)
+        external
+        virtual
+        override
+        returns (bool)
+    {
         address from = _msgSender();
         _transfer(from, _id, _to);
         return true;
     }
 
-    function _transfer(address _from, uint256 _id, address _to ) internal virtual {
-        if(_from == address(0) ||_to == address(0))
+    /**
+     * @dev see {ISBTDOubleSig-transfer}
+     */
+    function _transfer(
+        address _from,
+        uint256 _id,
+        address _to
+    ) internal virtual {
+        if (_from == address(0) || _to == address(0))
             revert TransferError(_from, _to);
-        if (tokens[_id].owner != _from)
-            revert NotOwner(_from);
-        if (balanceOf[_to][_id] != false)
-            revert AlreadyOwned(_to, _id);
-        if (pending[_to][_id] != false)
-            revert AlreadyPending(_to, _id);
+        if (tokens[_id].owner != _from) revert NotOwner(_from);
+        if (balanceOf[_to][_id] != false) revert AlreadyOwned(_to, _id);
+        if (pending[_to][_id] != false) revert AlreadyPending(_to, _id);
         _beforeTokenTransfer(_from, _to, nonce, 1);
         pending[_to][_id] = true;
         _afterTokenTransfer(_from, _to, nonce, 1);
         emit TokenTransfer(_from, _to, _id);
     }
-    
-    function transferBatch(uint256 _id, address[] calldata _to) external virtual override returns(bool) {
+
+    /**
+     * @dev see {ISBTDOubleSig-transferBatch}
+     */
+    function transferBatch(uint256 _id, address[] calldata _to)
+        external
+        virtual
+        override
+        returns (bool)
+    {
         address from = _msgSender();
         _transferBatch(from, _id, _to);
         return true;
     }
 
-    function _transferBatch(address _from, uint256 _id, address[] memory _to ) internal virtual {
-        if (tokens[_id].owner != _from)
-            revert NotOwner(_from);
-            
+    /**
+     * @dev see {ISBTDOubleSig-transferBatch}
+     */
+    function _transferBatch(
+        address _from,
+        uint256 _id,
+        address[] memory _to
+    ) internal virtual {
+        if (tokens[_id].owner != _from) revert NotOwner(_from);
         for (uint256 i = 0; i < _to.length; ) {
             address _dest = _to[i];
-            if (balanceOf[_dest][_id] != false)
-                revert AlreadyOwned(_dest, _id);
-            if (pending[_dest][_id] != false)
-                revert AlreadyPending(_dest, _id);
+            if (balanceOf[_dest][_id] != false) revert AlreadyOwned(_dest, _id);
+            if (pending[_dest][_id] != false) revert AlreadyPending(_dest, _id);
             _transfer(_from, _id, _dest);
             unchecked {
                 ++i;
@@ -209,7 +263,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
 
     function _claim(address _account, uint256 _id) internal virtual {
         if (balanceOf[_account][_id] != false || pending[_account][_id] != true)
-            revert CanNotClaim(_account,_id);
+            revert CanNotClaim(_account, _id);
 
         _beforeTokenClaim(_account, _id);
         balanceOf[_account][_id] = true;
@@ -226,12 +280,12 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
 
     function _reject(address _account, uint256 _id) internal virtual {
         if (balanceOf[_account][_id] != false || pending[_account][_id] != true)
-            revert CanNotClaim(_account,_id);
+            revert CanNotClaim(_account, _id);
 
         _beforeTokenClaim(address(0), _id);
         balanceOf[_account][_id] = false;
         pending[_account][_id] = false;
-        emit TokenClaimed(address(0),true, _id);
+        emit TokenClaimed(address(0), true, _id);
         _afterTokenClaim(address(0), _id);
     }
 
@@ -241,10 +295,8 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     function _burn(address _account, uint256 _id) internal virtual {
-        if(balanceOf[_account][_id] == true)
-            revert NotOwner(_account);
-        if(amount[_id] <= 0)
-            revert CanNotClaim(_account, _id);
+        if (balanceOf[_account][_id] == true) revert NotOwner(_account);
+        if (amount[_id] <= 0) revert CanNotClaim(_account, _id);
         _beforeTokenTransfer(_account, address(0), _id, 1);
         balanceOf[_account][_id] = false;
         amount[_id]--;
@@ -265,6 +317,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
         uint256 _id,
         uint256 _amount
     ) internal virtual {}
+
     /**
      * @dev Hook that is called after any transfer of tokens. This includes
      * minting and burning.
@@ -284,24 +337,19 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
      * @dev Hook that is called before any token claim.
      * @param _newOwner the address who will claim or reject the token
      * @param _id the token id
-     * @param _claimed if it is true the token will be claimed,
-     * if it is false the token will be rejected
      */
-    function _beforeTokenClaim(
-        address _newOwner,
-        uint256 _id,
-        bool _claimend
-    ) internal virtual {}
+    function _beforeTokenClaim(address _newOwner, uint256 _id)
+        internal
+        virtual
+    {}
+
     /**
      * @dev Hook that is called after any token claim.
-     * @param _newOwner the address who has claimed or rejected the token 
+     * @param _newOwner the address who has claimed or rejected the token
      * @param _id the token id
-     * @param _claimed if it is true the token is claimed,
-     * if it is false the token is rejected
      */
-    function _afterTokenClaim(
-        address _newOwner,
-        uint256 _id,
-        bool _claimed
-    ) internal virtual {}
+    function _afterTokenClaim(address _newOwner, uint256 _id)
+        internal
+        virtual
+    {}
 }
