@@ -136,7 +136,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /** 
-    *@dev mints a token
+    *@dev mints a token extrarnally
     *@param _data the uri of the token
     */
     function mint(string calldata _data) external virtual {
@@ -145,7 +145,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-    *@dev mints a token
+    *@dev mints a token internally
     *@param _account address who will mint the token
     *@param _data the uri of the token
     */
@@ -254,36 +254,54 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
 
     /**
      * @dev Hook that is called before any minting of tokens.
+     * @param _from the address who will make the token transfer
+     * @param _to the address who will received the token transfer
+     * @param _id the token id
+     * @param _amount the amount of tokens that will be transfered
      */
     function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 id,
+        address _from,
+        address _to,
+        uint256 _id,
         uint256 _amount
     ) internal virtual {}
     /**
      * @dev Hook that is called after any transfer of tokens. This includes
      * minting and burning.
+     * @param _from the address who has make the token transfer
+     * @param _to the address who has received the token transfer
+     * @param _id the token id
+     * @param _amount the amount of tokens that was transfered
      */
     function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 id,
+        address _from,
+        address _to,
+        uint256 _id,
         uint256 _amount
     ) internal virtual {}
 
     /**
      * @dev Hook that is called before any token claim.
+     * @param _newOwner the address who will claim or reject the token
+     * @param _id the token id
+     * @param _claimed if it is true the token will be claimed,
+     * if it is false the token will be rejected
      */
     function _beforeTokenClaim(
-        address newOwner,
-        uint256 id
+        address _newOwner,
+        uint256 _id,
+        bool _claimend
     ) internal virtual {}
     /**
      * @dev Hook that is called after any token claim.
+     * @param _newOwner the address who has claimed or rejected the token 
+     * @param _id the token id
+     * @param _claimed if it is true the token is claimed,
+     * if it is false the token is rejected
      */
     function _afterTokenClaim(
-        address newOwner,
-        uint256 id
+        address _newOwner,
+        uint256 _id,
+        bool _claimed
     ) internal virtual {}
 }
