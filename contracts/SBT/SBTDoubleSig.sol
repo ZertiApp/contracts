@@ -10,12 +10,14 @@ pragma solidity ^0.8.4;
 
 import "./ISBTDoubleSig.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+/* import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol"; */
 
-contract SBTDoubleSig is Context,ERC165, ISBTDoubleSig {
+contract SBTDoubleSig is Context, ISBTDoubleSig {
 
     uint256 private nonce;
+    // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
+    string private _uri;
     mapping(uint256 => Token) public tokens; // id to Token
     mapping(uint256 => uint256) public amount; // the amounts of tokens for each Token
     mapping(address => mapping(uint256 => bool)) public balanceOf; // if owner has a specific Token
@@ -25,19 +27,30 @@ contract SBTDoubleSig is Context,ERC165, ISBTDoubleSig {
         address owner;
         string data;
     }
+
+    /**
+     * @dev See {_setURI}.
+     */
+    constructor(string memory uri_) {
+        _setURI(uri_);
+    }
     
     error NotOwner(address _sender);
     error AlreadyOwned(address _account, uint256 _id);
     error AlreadyPending(address _account, uint256 _id);
     error CanNotClaim(address _account, uint256 _id);
 
-    /**
+    /* 
      * @dev See {IERC165-supportsInterface}.
-     */
+     *
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return
-            interfaceId == type(SBTDoubleSig).interfaceId;
+            interfaceId == type(ISBTDoubleSig).interfaceId ||
             super.supportsInterface(interfaceId);
+    } */
+
+    function uri(uint256) external view virtual override returns (string memory) {
+        return _uri;
     }
 
     function ownerOf(uint256 _id) external view virtual override returns(address) {
@@ -96,6 +109,10 @@ contract SBTDoubleSig is Context,ERC165, ISBTDoubleSig {
     }
 
 
+    function _setURI(string memory newuri) internal virtual {
+        _uri = newuri;
+    }
+
     /** 
     *@dev mints a token
     *@param _data the uri of the token
@@ -115,7 +132,7 @@ contract SBTDoubleSig is Context,ERC165, ISBTDoubleSig {
         _beforeTokenTransfer(address(0),_account, nonce, 0);
         tokens[nonce] = Token(_account, _data);
         amount[nonce] = 0;
-        emit TokenTransfer(0,msg.sender, nonce);
+        emit TokenTransfer(address(0),msg.sender, nonce);
         _afterTokenTransfer(address(0),_account, nonce, 0);
     }
 
@@ -166,16 +183,16 @@ contract SBTDoubleSig is Context,ERC165, ISBTDoubleSig {
         _claim(claimer, _id);
     }
 
-    function _claim(address account, uint256 _id) internal virtual {
-        if (balanceOf[account][_id] != false || pending[account][_id] != true)
-            revert CanNotClaim(_id);
+    function _claim(address _account, uint256 _id) internal virtual {
+        if (balanceOf[_account][_id] != false || pending[_account][_id] != true)
+            revert CanNotClaim(_account,_id);
 
-        _beforeTokenClaim(account, _id);
-        balanceOf[account][_id] = true;
-        pending[account][_id] = false;
+        _beforeTokenClaim(_account, _id);
+        balanceOf[_account][_id] = true;
+        pending[_account][_id] = false;
         amount[_id]++;
-        emit TokenClaimed(account, true, _id);
-        _afterTokenClaim(account, _id);
+        emit TokenClaimed(_account, true, _id);
+        _afterTokenClaim(_account, _id);
     }
 
     function reject(uint256 _id) external virtual {
@@ -190,7 +207,7 @@ contract SBTDoubleSig is Context,ERC165, ISBTDoubleSig {
         _beforeTokenClaim(address(0), _id);
         balanceOf[_account][_id] = false;
         pending[_account][_id] = false;
-        emit TokenClaimed(address(0), _id);
+        emit TokenClaimed(address(0),true, _id);
         _afterTokenClaim(address(0), _id);
     }
 
@@ -207,7 +224,7 @@ contract SBTDoubleSig is Context,ERC165, ISBTDoubleSig {
         _beforeTokenTransfer(_account, address(0), _id, 1);
         balanceOf[_account][_id] = false;
         amount[_id]--;
-        emit TokenTransfer(_account, 0, _id);
+        emit TokenTransfer(_account, address(0), _id);
         _afterTokenTransfer(_account, address(0), _id, 1);
     }
 

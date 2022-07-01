@@ -8,6 +8,8 @@ pragma solidity ^0.8.4;
 interface ISBTDoubleSig {
 
     //View
+    function uri(uint256) external view  returns (string memory);
+
     function ownerOf(uint256 _id) external view returns(address);
 
     function uriOf(uint256 _id) external view  returns(string memory);
