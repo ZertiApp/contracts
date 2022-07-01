@@ -9,10 +9,13 @@
 pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
-import "./IERC1415.sol";
-import "@openzeppelin\contracts\utils\Context.sol";
+import "./ISBTDoubleSig.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-contract ERC1415 is IERC1415, Context {
+
+contract ERC1415 is Context, ERC165, IERC1415 {
 
     uint256 private nonce;
     mapping(uint256 => Token) public tokens; // id to Token
@@ -31,6 +34,16 @@ contract ERC1415 is IERC1415, Context {
     error NotEligableToClaim(uint256 _id);
     error NotAnEntity(address _sender);
     error CeroTokensIn(uint256 _id);
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
 
     //Function
     function mint(string calldata _data) external virtual {
@@ -102,15 +115,16 @@ contract ERC1415 is IERC1415, Context {
     }
 
     function reject(uint256 _id) external virtual {
-        _reject(msg.sender, _id);
+        address sender = _msgSender();
+        _reject(sender, _id);
     }
 
     function _reject(address account, uint256 _id) internal virtual {
-        if (owners[msg.sender][_id] != false || pending[msg.sender][_id] != true)
+        if (owners[account][_id] != false || pending[account][_id] != true)
             revert NotEligableToClaim(_id);
         owners[account][_id] = false;
         pending[account][_id] = false;
-        emit (account, false, _id);
+        emit Claim (account, false, _id);
     }
 
     function burn(uint256 _id) external virtual {

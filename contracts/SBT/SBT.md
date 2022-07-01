@@ -1,12 +1,12 @@
 ---
 eip: <to be assigned>
-title: <SBT(SoulBourn Token)>
-description: <Description is one full (short) sentence>
+title: <SFSBT>
+description: <Semi-fungible SBT (SoulBourn Token)>
 author: Matias Arazi ((@MatiArazi)[https://github.com/MatiArazi]), Lucas Grasso Ramos ((@LucasGrasso)[https://github.com/LucasGrasso]),
 discussions-to: <URL>
 status: Draft
 type: <Standards Track, Meta, or Informational>
-category (*only required for Standards Track): <Core, Networking, Interface, or ERC>
+category (*only required for Standards Track): ERC
 created: <date created on, in ISO 8601 (yyyy-mm-dd) format>
 requires (*optional): <EIP number(s)>
 ---
@@ -22,6 +22,8 @@ Abstract is a multi-sentence (short paragraph) technical summary. This should be
 
 ## Motivation
 The motivation section should describe the "why" of this EIP. What problem does it solve? Why should someone want to implement this standard? What benefit does it provide to the Ethereum ecosystem? What use cases does this EIP address?
+
+
 
 ## Specification
 The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in RFC 2119.
