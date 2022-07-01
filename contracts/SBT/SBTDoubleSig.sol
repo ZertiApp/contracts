@@ -39,6 +39,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     error AlreadyOwned(address _account, uint256 _id);
     error AlreadyPending(address _account, uint256 _id);
     error CanNotClaim(address _account, uint256 _id);
+    error TransferError(address _from, address _to);
 
     /* 
      * @dev See {IERC165-supportsInterface}.
@@ -49,19 +50,37 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
             super.supportsInterface(interfaceId);
     } */
 
-    function uri(uint256) external view virtual override returns (string memory) {
+    /**
+     * @dev See {ISBTDOubleSig-uri}.
+     */
+    function uri() external view virtual override returns (string memory) {
         return _uri;
     }
 
+    /**
+     * @dev See {ISBTDOubleSig-ownerOf}.
+     */
     function ownerOf(uint256 _id) external view virtual override returns(address) {
         return (tokens[_id].owner);
     }
+
+    /**
+     * @dev See {ISBTDOubleSig-uriOf}.
+     */
     function uriOf(uint256 _id) external view virtual override returns(string memory){
         return (tokens[_id].data);
     }
+
+    /**
+     * @dev See {ISBTDOubleSig-amountOf}.
+     */
     function amountOf(uint256 _id) external view virtual override returns(uint256){
         return (amount[_id]);
     }
+
+    /**
+     * @dev See {ISBTDOubleSig-tokensFrom}.
+     */
     function tokensFrom(address _from) external view virtual override returns(uint256[] memory) {
         uint256 _tokenCount = 0;
         for(uint256 i = 1; i<= nonce;){
@@ -86,6 +105,9 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
         return _ownedTokens;
     }
 
+    /**
+     * @dev See {ISBTDOubleSig-pendingFrom}.
+     */
     function pendingFrom(address _from) external view virtual override returns(uint256[] memory){
         uint256 _tokenCount = 0;
         for(uint256 i = 1; i<=nonce;){
@@ -143,6 +165,8 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     function _transfer(address _from, uint256 _id, address _to ) internal virtual {
+        if(_from == address(0) ||_to == address(0))
+            revert TransferError(_from, _to);
         if (tokens[_id].owner != _from)
             revert NotOwner(_from);
         if (balanceOf[_to][_id] != false)

@@ -1,7 +1,6 @@
 const { config } = require("dotenv");
 
 require("dotenv").config();
-  
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
