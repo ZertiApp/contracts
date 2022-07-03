@@ -47,8 +47,8 @@ contract VoteFactory is MinimalProxy {
     /**
      * @dev events
      */
-    event EthReceived(address _sender, uint256 _amount);
-    event EntityAdded(address _newEntity, address _caledBy);
+    event EthReceived(address indexed _sender, uint256 _amount);
+    event EntityAdded(address indexed _newEntity, address indexed _caledBy);
 
     constructor() {
         admin = msg.sender;
