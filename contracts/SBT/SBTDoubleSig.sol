@@ -23,6 +23,9 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     mapping(address => mapping(uint256 => bool)) public balanceOf; // if owner has a specific Token
     mapping(address => mapping(uint256 => bool)) public pending; // if owner has pending a specific Token
 
+    /**
+     * @dev Main token struct.
+     */
     struct Token {
         address owner;
         string data;
@@ -35,11 +38,14 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
         _setURI(uri_);
     }
 
+    /**
+     * @dev Custom Errors
+     */
     error NotOwner(address _sender);
     error AlreadyOwned(address _account, uint256 _id);
     error AlreadyPending(address _account, uint256 _id);
     error CanNotClaim(address _account, uint256 _id);
-    error TransferError(address _from, address _to);
+    error CeroAddressError(address _account1, address _account2);
 
     /* 
      * @dev See {IERC165-supportsInterface}.
@@ -51,14 +57,14 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     } */
 
     /**
-     * @dev See {ISBTDOubleSig-uri}.
+     * @dev See {ISBTDoubleSig-uri}.
      */
     function uri() external view virtual override returns (string memory) {
         return _uri;
     }
 
     /**
-     * @dev See {ISBTDOubleSig-ownerOf}.
+     * @dev See {ISBTDoubleSig-ownerOf}.
      */
     function ownerOf(uint256 _id)
         external
@@ -71,7 +77,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev See {ISBTDOubleSig-uriOf}.
+     * @dev See {ISBTDoubleSig-uriOf}.
      */
     function uriOf(uint256 _id)
         external
@@ -84,7 +90,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev See {ISBTDOubleSig-amountOf}.
+     * @dev See {ISBTDoubleSig-amountOf}.
      */
     function amountOf(uint256 _id)
         external
@@ -97,7 +103,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev See {ISBTDOubleSig-tokensFrom}.
+     * @dev See {ISBTDoubleSig-tokensFrom}.
      */
     function tokensFrom(address _from)
         external
@@ -130,7 +136,14 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev See {ISBTDOubleSig-pendingFrom}.
+     * @dev sets newURI.
+     */
+    function _setURI(string memory newuri) internal virtual {
+        _uri = newuri;
+    }
+
+    /**
+     * @dev See {ISBTDoubleSig-pendingFrom}.
      */
     function pendingFrom(address _from)
         external
@@ -160,12 +173,8 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
         return _pendingTokens;
     }
 
-    function _setURI(string memory newuri) internal virtual {
-        _uri = newuri;
-    }
-
     /**
-     *@dev mints a token extrarnally
+     *@dev mints a token.
      *@param _data the uri of the token
      */
     function mint(string calldata _data) external virtual {
@@ -190,7 +199,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev see {ISBTDOubleSig-transfer}
+     * @dev see {ISBTDoubleSig-transfer}
      */
     function transfer(uint256 _id, address _to)
         external
@@ -204,7 +213,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev see {ISBTDOubleSig-transfer}
+     * @dev see {ISBTDoubleSig-transfer}
      */
     function _transfer(
         address _from,
@@ -212,7 +221,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
         address _to
     ) internal virtual {
         if (_from == address(0) || _to == address(0))
-            revert TransferError(_from, _to);
+            revert CeroAddressError(_from, _to);
         if (tokens[_id].owner != _from) revert NotOwner(_from);
         if (balanceOf[_to][_id] != false) revert AlreadyOwned(_to, _id);
         if (pending[_to][_id] != false) revert AlreadyPending(_to, _id);
@@ -223,7 +232,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev see {ISBTDOubleSig-transferBatch}
+     * @dev see {ISBTDoubleSig-transferBatch}
      */
     function transferBatch(uint256 _id, address[] calldata _to)
         external
@@ -237,7 +246,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     * @dev see {ISBTDOubleSig-transferBatch}
+     * @dev see {ISBTDoubleSig-transferBatch}
      */
     function _transferBatch(
         address _from,
@@ -256,50 +265,95 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
         }
     }
 
+    /**
+     * See {SBTDoubleSig-_claim}
+     */
     function claim(uint256 _id) external virtual {
         address claimer = _msgSender();
         _claim(claimer, _id);
     }
 
+    /**
+     * @dev Claims pending `_id` from address `_account`.
+     *
+     * Requirements:
+     * - `_account` cannot be the zero address.
+     * - `_account` MUST have a pending token under `id`.
+     * - `_account` MUST NOT own a token under `id`.
+     *
+     * Emits a {TokenClaimed} event.
+     *
+     */
     function _claim(address _account, uint256 _id) internal virtual {
+        if (_account == address(0)) revert CeroAddressError(_account, _account);
         if (balanceOf[_account][_id] != false || pending[_account][_id] != true)
             revert CanNotClaim(_account, _id);
 
         _beforeTokenClaim(_account, _id);
         balanceOf[_account][_id] = true;
         pending[_account][_id] = false;
-        amount[_id]++;
-        emit TokenClaimed(_account, true, _id);
+        unchecked {
+            amount[_id]++;
+        }
+        emit TokenClaimed(_account, _id);
         _afterTokenClaim(_account, _id);
     }
 
+    /**
+     * See {SBTDoubleSig-_reject}
+     */
     function reject(uint256 _id) external virtual {
         address _account = _msgSender();
         _reject(_account, _id);
     }
 
+    /**
+     * @dev Rejects pending `_id` from address `_account`.
+     *
+     * Requirements:
+     *  - See {SBTDoubleSig-_claim}
+     *
+     * Emits a {TokenClaimed} event.
+     *
+     */
     function _reject(address _account, uint256 _id) internal virtual {
+        if (_account == address(0)) revert CeroAddressError(_account, _account);
         if (balanceOf[_account][_id] != false || pending[_account][_id] != true)
             revert CanNotClaim(_account, _id);
 
         _beforeTokenClaim(address(0), _id);
         balanceOf[_account][_id] = false;
         pending[_account][_id] = false;
-        emit TokenClaimed(address(0), true, _id);
+        emit TokenClaimed(address(0), _id);
         _afterTokenClaim(address(0), _id);
     }
 
+    /**
+     * See {SBTDoubleSig-_burn}
+     */
     function burn(uint256 _id) external virtual {
         address burner = _msgSender();
         _burn(burner, _id);
     }
 
+    /**
+     * @dev Destroys `_id` token from `_account`
+     *
+     * Emits a {Transfer} event with `to` set to the zero address.
+     *
+     * Requirements:
+     * - `account` cannot be the zero address.
+     * - `account` must have `_id` token.
+     * - There must be at least one token under `_id`
+     */
     function _burn(address _account, uint256 _id) internal virtual {
         if (balanceOf[_account][_id] == true) revert NotOwner(_account);
         if (amount[_id] <= 0) revert CanNotClaim(_account, _id);
         _beforeTokenTransfer(_account, address(0), _id, 1);
         balanceOf[_account][_id] = false;
-        amount[_id]--;
+        unchecked {
+            amount[_id]--;
+        }
         emit TokenTransfer(_account, address(0), _id);
         _afterTokenTransfer(_account, address(0), _id, 1);
     }

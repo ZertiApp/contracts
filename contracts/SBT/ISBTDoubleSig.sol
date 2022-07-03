@@ -21,7 +21,6 @@ interface ISBTDoubleSig {
      */
     event TokenClaimed(
         address indexed _newOwner,
-        bool claimed,
         uint256 _id
     );
 
@@ -67,24 +66,24 @@ interface ISBTDoubleSig {
     function pendingFrom(address _from) external view returns(uint256[] memory);
 
     /**
-     * @dev Transfers `_tokenId` token from `_from` to `_to`.
+     * @dev Transfers `_id` token from `_from` to `_to`.
      *
      * Requirements:
      *
      * - `_from` cannot be the zero address.
      * - `_to` cannot be the zero address.
-     * `_to` MUST NOT have a pending token under `tokenId`.
-     * `_from` Must be the minter(owner before assigning `_tokenId` as pending to `_to` ) of `_tokenId`
-     * - `_to` cannot own a token under _tokenId at call.
+     * `_to` MUST NOT have a pending token under `id`.
+     * `_from` Must be the minter(owner before assigning `_tokenId` as pending to `_to` ) of `_id`
+     * - `_to` cannot own a token under _id at call.
      *
      * Emits a {TokenTransfer} event.
      *
-     * @return bool stating opperation success
+     * Returns a boolean value indicating whether the operation succeeded.
      */
-    function transfer(address _from, uint256 _id , address _to) external returns (bool);
+    function transfer(uint256 _id , address _to) external returns (bool);
 
     /**
-     * @dev Transfers `_tokenId` token from `_from` to `_to[]`.
+     * @dev Transfers `_id` token from `_from` to every address at `_to[]`.
      *
      * Requirements: See {transfer}
      *
@@ -92,11 +91,8 @@ interface ISBTDoubleSig {
      *
      * Emits a {TokenTransfer} event len(_to) times.
      *
-     * @return bool stating opperation success
+     * Returns a boolean value indicating whether the operation succeeded.
      */
-    function transferBatch(
-        address _from,
-        uint256 _id,
-        address[] memory _to
-    ) external returns (bool);
+    function transferBatch(uint256 _id, address[] memory _to) external returns (bool);
+    
 }
