@@ -180,7 +180,7 @@ contract Vote {
     receive() external payable {}
 
     /**
-     * @dev Get contract balance
+     * @dev Get entity that is being voted.
      * @return address, addr of entity being voted
      */
     function getWhoBeingVoted() external view IsInit returns (address) {
@@ -238,7 +238,7 @@ contract Vote {
 
     /**
      * @dev get endTime timestamp
-     * @return uint256 block.timestamp at init + n days- endTime.
+     * @return uint256 block.timestamp at init + timeToVote days.
      */
     function getEndTime() external view IsInit returns (uint256) {
         return endTime;

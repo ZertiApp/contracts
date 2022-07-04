@@ -1,6 +1,7 @@
 # Vote.sol
 
 For each Vote contract, users are able to create a "Voting Pool" and to determine if the entity in question should be considered as such. Each vote has its time limit,  minimum votes and voting cost required. It is important to consider that results are given by majority and that each clone of the Vote contract acts independentely.
+Each postulations has it own Vote.sol instance.
 
 * Implements the DAO Voting System.
 * Implements the Voting-Pool Reward System.
@@ -12,7 +13,7 @@ For each Vote contract, users are able to create a "Voting Pool" and to determin
 * At vote finish, distributes the pool according to majoritarian vote.
 
 ![VotingPoolPattern](https://user-images.githubusercontent.com/66641667/175523913-0492bb02-2f5b-4c83-a5d6-2e5a9e12f1a9.png)
-Voting Pool: Stake-ish MATIC pool formed by the tokens sent by Users. It is distributed based on majoritarian vote, generating a reward system for people in order to incentivate entity verification.
+__Voting Pool:__ Stake-ish MATIC (ethers) pool formed by the tokens sent by Users. It is distributed based on majoritarian vote, generating a reward system for people in order to incentivate entity verification.
 ![DistributePoolPattern](https://user-images.githubusercontent.com/66641667/175523873-1a9dae75-0776-4e97-956e-279b123273ec.png)
 When a vote finishes, the pool is distributed based on majoritarian vote. This system's sole objective is to incentivate entity verification for the community.
 
@@ -74,6 +75,9 @@ function initialize(
 ### Reverts on:
 * msg.value not equal to votingCost.
 * msg.sender already voted.
+* Not initialized
+* block.timestamp at call exceeds set time.
+* Voting finished.
 
 Main voting function.  
 Users should send correct amount of ethers to vote. Determined at init. and obtainable at getVotingCost().  
@@ -93,6 +97,89 @@ function sendVote(uint8 _userVote) external payable IsInit CanVote {
 }
 ```
 ---
+## View and Info-Retrieving functions
+### getWhoBeingVoted()
+Get entity that is being voted.
+
+### Returns:
+* address of entity being voted
+---
+### getTotalDeposit()
+Get contract balance
+
+### Returns:
+* uint256, balance of the contract(IN GWEI).
+---
+### getUserVoted(address _addr)
+Check if address has already voted
+
+### Params: 
+* __\_addr__ address to check.
+
+### Returns:
+* boolean value stating if selected address has already voted.
+---
+### getInit()
+Check if contract is initialized
+
+### Returns:
+* boolean value stating if contract is initiliazed
+---
+### getVotesAgainst()
+Check against votes
+
+### Returns:
+* uint256, number of votes against.
+---
+### getVotesInFavour()
+Check in favour votes
+
+### Returns:
+* uint256, number of votes in favour.
+---
+### getVotingCost()
+get voting cost, if 0, voting closed
+
+### Returns: 
+* uint256, neccesary ethers to stake/vote(IN GWEI)
+---
+### getEndTime()
+Get endTime timestamp(Unix Time)
+
+### Returns:
+* uint256, block.timestamp at init + timeToVote days.
+---
+## _Internal Functions_
+### __voteFinalization()__
+
+Sets vote result and calls distributeVotePool() function
+
+internal and should only be called by an Admin contract.
+Emits a {VoteFinished} event; and calls distributePool().
+
+### distributePool()
+Transfers ether to vote winners.
+Distributes reward system pool between winners(majority).  
+
+``` solidity
+function distributePool(
+    uint256 _amount,
+    address[] memory _votersResult,
+    uint256 _resultLen
+) internal IsInit {
+    if (votingCost != 0 || block.timestamp < endTime)
+        revert VotingNotEnded(); 
+    for (uint256 i = 0; i < _resultLen; ) {
+        payable(_votersResult[i]).transfer(_amount);
+        unchecked {
+            ++i;
+        }
+    }
+```
+
+---
+###
+# Zerti
 * ### [Matias Arazi](https://github.com/MatiArazi)
 * ### [Lucas Grasso](https://github.com/LucasGrasso)
 ---
