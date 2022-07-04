@@ -83,7 +83,7 @@ contract VoteFactory is MinimalProxy {
         uint256 _votingCost,
         uint256 _minVotes,
         uint256 _timeToVote
-    ) public payable {
+    ) public payable returns(bool) {
         if (postulations[msg.sender]) revert AlreadyPostulated(msg.sender);
         if (_votingCost == 0 || _minVotes < 2 || _timeToVote < 2)
             //¡¡¡¡¡¡ONLY FOR TESTING!!!!!!!!
@@ -102,6 +102,8 @@ contract VoteFactory is MinimalProxy {
 
         postulations[msg.sender] = true;
         clones[_voteProxy] = true;
+
+        return true;
     }
 
     /**
@@ -110,7 +112,7 @@ contract VoteFactory is MinimalProxy {
      * Entity has to pay determined value, and it may repostulate for voting
      */
     function rePostulationAllowance() public payable {
-        if(postulations[msg.sender])
+        if(postulations[msg.sender] && entities[msg.sender])
             revert AlreadySelectedAsEntity(msg.sender);
         if(msg.value != reAlowanceValue)
             revert InvalidInput(msg.value);
