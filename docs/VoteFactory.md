@@ -1,8 +1,12 @@
 # VoteFactory.sol
 
-Implements EIP1167 standard to clone instances of the vote.sol contract.  
-Stores all deployed clones at clones mapping.  
-Stores all validated entities at entities mapping;
+* Implements EIP1167 standard to clone instances of the vote.sol contract.  
+* Stores all deployed clones at clones mapping.  
+* Stores all validated entities at entities mapping.  
+* Entities interact wit this contract when postulating/repostulating.
+* Badge contracts interact with IVF to check if an address is an entity.
+* Devs can interact with the View Methods to retrieve information about the current state of the contract.
+* Admin should interact with VoteFactory to change contract state.
 
 ![ProxyPattern](https://user-images.githubusercontent.com/66641667/175523951-94a143a4-f573-4abb-a994-4a047ba0dc5d.png)
 
@@ -40,6 +44,7 @@ Stores all validated entities at entities mapping;
 
 Can be called by everyone.
 Creates an instance of the vote proxy contract and emits a {ProxyCreated} event, then initializes the Clone/Proxy.
+Entities call this function at postulation.
 
 ### Reverts on:
 * Invalid input(_votingCost == 0 || _minVotes < 2 || _timeToVote < 2)
@@ -69,6 +74,7 @@ function createVote(
 ### __rePostulationAllowance()__
 
 Allows entity to repostulate. If entity sends especified amount of ethers to the function, it is allowed to iniciate a new vote.
+Entity should not be validated(lost at previous votation).
 
 ### Reverts on:
 * Call by an already validated entity.
@@ -126,6 +132,21 @@ function isEntity(address _addr) external view returns (bool) {
 }
 ```
 ___
+### __getPostulated(\_addr)__
+
+Check if a given address has postulated.
+
+### Params:
+* __\_addr__ address of the entity to be queried.
+### Returns: 
+* Boolean value stating if address has postulated.  
+
+```solidity
+function hasPostulated(address _addr) external view returns (bool) {
+    return postulations[_addr];
+}
+```
+---
 ## _Admin methods_
 ### __changeImpl(\_newVoteImpl)__
 
@@ -136,7 +157,7 @@ Only callable by Admin.
 Changes the address from which vote contracts are cloned.
 
 ### Reverts on:
-* call by everyone if not Admin.
+* Call by everyone if not Admin.
 
 ```solidity
 function changeImpl(address _newVoteImpl) public onlyAdmin {

@@ -194,4 +194,14 @@ contract VoteFactory is MinimalProxy {
     function isEntity(address _addr) external view returns (bool) {
         return entities[_addr];
     }
+
+    /**
+     * @dev get if address postulated
+     *
+     * @param _addr address of the entity to be queried.
+     * @return bool stating if address has postulated.
+     */
+    function getPostulated(address _addr) external view returns (bool) {
+        return postulations[_addr];
+    }
 }
