@@ -59,7 +59,7 @@ function initialize(
 ) external {
     if (msg.sender != VOTEFACTORY || isInitialized)
         revert CantInit(msg.sender);
-    isInitialized =o true;
+    isInitialized = true;
     votingCost = _votingCost * 1 ether;
     minVotes = _minVotes;
     endTime = block.timestamp + (_timeToVote * 1 days);
