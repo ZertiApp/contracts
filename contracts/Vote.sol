@@ -39,7 +39,7 @@ contract Vote {
      */
     event UserVoted(address indexed userAddr, uint8 vote);
 
-    event VoteFinished(address entity, uint8 result);
+    event VoteFinished(address indexed entity, uint8 result);
 
     /**
      * @dev custom error msgs

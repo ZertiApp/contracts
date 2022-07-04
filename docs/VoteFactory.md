@@ -1,12 +1,14 @@
 # VoteFactory.sol
 
-* Implements EIP1167 standard to clone instances of the vote.sol contract.  
+We will be calling acaemic institutes and/or enterprises wishing to emit certificates entities. When one of such postulates as one, it interacts with the VoteFactory contract, which uses an upgradeable EIP1167 implementation, creating a clone of the Vote contract.
+
+* Implements EIP1167 standard to clone instances of the Vote.sol contract.  
 * Stores all deployed clones at clones mapping.  
 * Stores all validated entities at entities mapping.  
 * Entities interact wit this contract when postulating/repostulating.
 * Badge contracts interact with IVF to check if an address is an entity.
 * Devs can interact with the View Methods to retrieve information about the current state of the contract.
-* Admin should interact with VoteFactory to change contract state.
+* Admin should interact with VoteFactory to change contract state. 
 
 ![ProxyPattern](https://user-images.githubusercontent.com/66641667/175523951-94a143a4-f573-4abb-a994-4a047ba0dc5d.png)
 
@@ -32,7 +34,7 @@
 ---
 # Methods:
 ## _Entity-related methods_
-### __createVote(votingCost, minVotes, timeToVote)__
+### __createVote(uint256 votingCost, uint256 minVotes, uint256 timeToVote)__
 
 ### Params: 
 * __votingCost:__ should be N usd, info gathered in the front-end
@@ -132,7 +134,7 @@ function isEntity(address _addr) external view returns (bool) {
 }
 ```
 ___
-### __getPostulated(\_addr)__
+### __getPostulated(address \_addr)__
 
 Check if a given address has postulated.
 
@@ -148,7 +150,7 @@ function hasPostulated(address _addr) external view returns (bool) {
 ```
 ---
 ## _Admin methods_
-### __changeImpl(\_newVoteImpl)__
+### __changeImpl(address \_newVoteImpl)__
 
 ### Params: 
 * __\_newVoteImpl__ address of the new Vote implementation
@@ -165,7 +167,7 @@ function changeImpl(address _newVoteImpl) public onlyAdmin {
 }
 ```
 ---
-### __changeAlowanceValue(\_newValue)__
+### __changeAlowanceValue(uint256 \_newValue)__
 
 ### Params: 
 * __\_newValue__ new amount to pay when repostulating.
@@ -185,3 +187,7 @@ function changeAlowanceValue(uint256 _newValue) external payable onlyAdmin {
     reAlowanceValue = _newValue;
 }
 ```
+---
+* ### [Matias Arazi](https://github.com/MatiArazi)
+* ### [Lucas Grasso](https://github.com/LucasGrasso)
+---
