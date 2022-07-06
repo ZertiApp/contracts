@@ -93,6 +93,80 @@ contract Vote {
     }
 
     /**
+     * @dev Get dat(URI with entity info)
+     * @return string, URI,IPFS link to entity info.
+     */
+    function getData() external view IsInit returns (address) {
+        return data;
+    }
+
+    /**
+     * @dev Get entity that is being voted.
+     * @return address, addr of entity being voted
+     */
+    function getWhoBeingVoted() external view IsInit returns (address) {
+        return sender;
+    }
+
+    /**
+     * @dev Get contract balance
+     * @return uint256, balance of the contract.
+     */
+    function getTotalDeposit() external view IsInit returns (uint256) {
+        return address(this).balance;
+    }
+
+    /**
+     * @dev check if address has already voted
+     * @param _addr address to check.
+     * @return bool stating if selected address has already voted.
+     */
+    function getUserVoted(address _addr) external view IsInit returns (bool) {
+        return voted[_addr];
+    }
+
+    /**
+     * @dev check if contract is initialized
+     * @return bool stating if contract is init
+     */
+    function getInit() external view IsInit returns (bool) {
+        return isInitialized;
+    }
+
+    /**
+     * @dev check against votes
+     * @return uint256 n of votes against.
+     */
+    function getVotesAgainst() external view IsInit returns (uint256) {
+        return voters[0].length;
+    }
+
+    /**
+     * @dev check in favour votes
+     * @return uint256 n of votes in favour.
+     */
+    function getVotesInFavour() external view IsInit returns (uint256) {
+        return voters[1].length;
+    }
+
+    /**
+     * @dev get voting cost, if 0, voting closed
+     * @return uint256, neccesary ethers to stake/vote.
+     */
+    function getVotingCost() external view IsInit returns (uint256) {
+        return votingCost;
+    }
+
+    /**
+     * @dev get endTime timestamp
+     * @return uint256 block.timestamp at init + timeToVote days.
+     */
+    function getEndTime() external view IsInit returns (uint256) {
+        return endTime;
+    }
+    
+
+    /**
      * @dev  Main sendVote function.
      * @dev receives ether and stores user's vote and address in tree structure.
      * @dev Sets "Voted[user]" to True.
@@ -182,68 +256,4 @@ contract Vote {
 
     receive() external payable {}
 
-    /**
-     * @dev Get entity that is being voted.
-     * @return address, addr of entity being voted
-     */
-    function getWhoBeingVoted() external view IsInit returns (address) {
-        return sender;
-    }
-
-    /**
-     * @dev Get contract balance
-     * @return uint256, balance of the contract.
-     */
-    function getTotalDeposit() external view IsInit returns (uint256) {
-        return address(this).balance;
-    }
-
-    /**
-     * @dev check if address has already voted
-     * @param _addr address to check.
-     * @return bool stating if selected address has already voted.
-     */
-    function getUserVoted(address _addr) external view IsInit returns (bool) {
-        return voted[_addr];
-    }
-
-    /**
-     * @dev check if contract is initialized
-     * @return bool stating if contract is init
-     */
-    function getInit() external view IsInit returns (bool) {
-        return isInitialized;
-    }
-
-    /**
-     * @dev check against votes
-     * @return uint256 n of votes against.
-     */
-    function getVotesAgainst() external view IsInit returns (uint256) {
-        return voters[0].length;
-    }
-
-    /**
-     * @dev check in favour votes
-     * @return uint256 n of votes in favour.
-     */
-    function getVotesInFavour() external view IsInit returns (uint256) {
-        return voters[1].length;
-    }
-
-    /**
-     * @dev get voting cost, if 0, voting closed
-     * @return uint256, neccesary ethers to stake/vote.
-     */
-    function getVotingCost() external view IsInit returns (uint256) {
-        return votingCost;
-    }
-
-    /**
-     * @dev get endTime timestamp
-     * @return uint256 block.timestamp at init + timeToVote days.
-     */
-    function getEndTime() external view IsInit returns (uint256) {
-        return endTime;
-    }
 }
