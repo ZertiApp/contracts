@@ -23,6 +23,7 @@ contract Vote {
     uint256 internal votingCost; //IF votingCost == 0, voting is Closed, avoids using 1 word of storage.
     uint256 internal minVotes;
     uint256 internal endTime;
+    string public data;
 
     /**
      * @dev Voter info.
@@ -70,6 +71,7 @@ contract Vote {
      * @param _sender entity to be verified.
      */
     function initialize(
+        string memory _data,
         uint256 _votingCost,
         uint256 _minVotes,
         uint256 _timeToVote,
@@ -82,6 +84,7 @@ contract Vote {
         if (isInitialized)
             revert CantInit(msg.sender); //¡¡¡¡¡¡ONLY FOR TESTING!!!!!
         isInitialized = true;
+        data = _data;
         votingCost = _votingCost * 1 ether;
         minVotes = _minVotes;
         endTime = block.timestamp + (_timeToVote * 1 days);
