@@ -8,8 +8,10 @@
 pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
+import "./SBT/ISBTDoubleSig.sol";
+import "./SBT/SBTDoubleSig.sol";
 
-contract EIPARAZI {
+contract Badge {
 
     uint256 private nonce;
     mapping(uint256 => Zerti) public zerties; // id to Zerti
