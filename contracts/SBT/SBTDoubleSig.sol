@@ -174,16 +174,7 @@ contract SBTDoubleSig is Context, ISBTDoubleSig {
     }
 
     /**
-     *@dev mints a token.
-     *@param _data the uri of the token
-     */
-    function mint(string calldata _data) external virtual {
-        address minter = _msgSender();
-        _mint(minter, _data);
-    }
-
-    /**
-     *@dev mints a token internally
+     *@dev mints(creates) a token
      *@param _account address who will mint the token
      *@param _data the uri of the token
      */

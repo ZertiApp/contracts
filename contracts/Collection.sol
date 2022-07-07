@@ -28,15 +28,22 @@ contract ZertiCollection is Context {
     * @param entity collections´s the one who created the collection
     * @param data the URI of the collection data
     */
-    event collection(uint256 eventType, uint256 id, address entity, string data);
+    event Collection(uint256 eventType, uint256 id, address entity, string data);
 
     function create(string calldata _data) external virtual{
         address minter = _msgSender();
         _create(minter, _data);
     }
 
+    /**
+     * @dev: create a collection
+     * @param _account address of the entity creating the collection.
+     * @param _data data of the collection.
+     * Emits a {Collection} event
+     *
+     */
     function _create(address _account, string calldata _data) internal virtual {
         collections[++nonce] = Collection(_account, _data);
-        emit collection(0, nonce, _account, _data);
+        emit Collection(0, nonce, _account, _data);
     }
 }
