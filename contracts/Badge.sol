@@ -36,6 +36,7 @@ contract Badge is SBTDoubleSig, ZertiCollection{
         }
         tokens[nonce] = Token(_account, _data);
         amount[nonce] = 0;
+        _createCollection(_account, _data);
         emit TokenTransfer(address(0), msg.sender, nonce);
     }
 

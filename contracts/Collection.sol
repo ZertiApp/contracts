@@ -2,8 +2,8 @@
 
 /**
  * @title Badge contract
- * @author Zerti Team - Matias Arazi
- * @notice Badge contract use for storing your badges as SBTs
+ * @author Zerti Team - Matias Arazi, Lucas Grasso Ramos
+ * @notice Collection contract for SBT tokens.
  */
 pragma solidity ^0.8.4;
 
@@ -21,10 +21,9 @@ contract ZertiCollection is Context {
 
     error NotOwner(address account, uint256 id);
 
-    modifier beOwner(address _account, uint256 _id){
-        if(_account != collections[_id].entity){
-            revert(NotOwner(_account, _id));
-        }
+    modifier isOwner(address _account, uint256 _id){
+        if(_account != collections[_id].entity)
+            revert NotOwner(_account, _id);
         _;
     }
 
@@ -37,76 +36,78 @@ contract ZertiCollection is Context {
     * @param entity collections´s the one who created the collection
     * @param data the URI of the collection data
     */
-    event Collection(uint256 eventType, uint256 id, address entity, string data);
+    event CollectionUpdate(uint8 eventType, address entity, uint256 id, string data);
 
     /**
     * @dev view function that gets the data from a specific collection
     * @param _id the id of a collection
     * @return a string with the data from the collection with id equal to _id
     */
-    function getData(uint256 _id) external view{
-        returns collections[_id].data;
+    function getData(uint256 _id) external view returns(string memory) {
+        return collections[_id].data;
     }
 
     /**
-    * @dev view function that gets the entity from a specific collection
-    * @param _id the id of a collection
-    * @return an address with the entity from the collection with id equal to _id
-    */
-    function getEntity() external view{
-        returns collections[_id].entity;
-    }
-
-    function create(string calldata _data) external virtual{
-        address minter = _msgSender();
-        _create(minter, _data);
-    }
-
-    /**
-     * @dev: create a collection
-     * @param _account address of the entity creating the collection.
-     * @param _data data of the collection.
-     * Emits a {Collection} event
+     * @dev Get the creator(entity) of a specific collection
+     *
+     * @param _id the id of a collection
+     * @return an address with the entity from the collection with id equal to _id
      *
      */
-    function _create(address _account, string calldata _data) internal virtual {
+    function getEntity(uint256 _id) external view returns (address) {
+        return collections[_id].entity;
+    }
+
+    /**
+     * @dev create a collection
+     *
+     * @param _account address of the entity creating the collection.
+     * @param _data data of the collection.
+     *
+     * Emits a {CollectionUpdate-0} event
+     *
+     */
+    function _createCollection(address _account, string memory _data) internal virtual {
         collections[++nonce] = Collection(_account, _data);
-        emit Collection(0, nonce, _account, _data);
+        emit CollectionUpdate(0, _account, nonce, _data);
     }
 
-    function modify(uint256 _id, string calldata _data) external virtual {
-        address minter = _msgSender();
-        _modify(minter, _data);
+    function modifyCollection (uint256 _id, string calldata _data) external virtual {
+        address account = _msgSender();
+        _modifyCollection(account, _id, _data);
     }
 
-        /**
-     * @dev: modifies a collection
+    /**
+     * @dev modify a collection
+     *
      * @param _account address of the entity modifing the collection.
      * @param _id the id of the collection to be modified
      * @param _data new data of the collection.
-     * Emits a {Collection} event
+     *
+     * Emits a {CollectionUpdate-1} event
      *
      */
-    function _modify(address _account, uint256 _id, string calldata _data) internal virtual beOwner{
+    function _modifyCollection(address _account, uint256 _id, string calldata _data) internal virtual isOwner(_account, _id) {
         collections[_id].data = _data;
-        emit Collection(1, _id, _account, _data);
-
+        emit CollectionUpdate(1,  _account, _id, _data);
     }
 
-    function delete uint256 _id) external virtual{
-        address minter = _msgSender();
-        _create(minter, _data);
+    function deleteCollection(uint256 _id) external virtual {
+        address account = _msgSender();
+        _deleteCollection(account, _id);
     }
 
     /**
-     * @dev: delete a collection
+     * @dev delete a collection
+     *
      * @param _account address of the entity deleting the collection.
      * @param _id id of the collection.
-     * Emits a {Collection} event
+     *
+     * Emits a {CollectionUpdate-2} event
      *
      */
-    function _delete(address _account,  uint256 _id) internal virtual beOwner{
-        emit Collection(2, _id, _account, collections[_id].data);
+    function _deleteCollection(address _account,  uint256 _id) internal virtual isOwner(_account, _id) {
+        emit CollectionUpdate(2, _account, _id, collections[_id].data);
         delete(collections[_id]);
     }
 
