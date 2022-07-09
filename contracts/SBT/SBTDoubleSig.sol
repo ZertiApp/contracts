@@ -9,7 +9,7 @@
 pragma solidity ^0.8.4;
 
 import "./ISBTDoubleSig.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
+import "../@openzeppelin/Context.sol";
 
 /* import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol"; */

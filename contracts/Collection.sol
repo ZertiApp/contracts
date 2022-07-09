@@ -7,7 +7,7 @@
  */
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/Context.sol";
+import "./@openzeppelin/Context.sol";
 
 contract ZertiCollection is Context {
 
