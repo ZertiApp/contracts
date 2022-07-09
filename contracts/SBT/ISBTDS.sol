@@ -5,7 +5,7 @@ pragma solidity ^0.8.4;
 /**
  * @dev Interface of the MSSBT
  */
-interface ISBTDoubleSig {
+interface ISBTDS {
 
     /**
      * @dev Emitted when `_id` token is transferred from `_from` to `_to`.

@@ -10,7 +10,7 @@ pragma solidity ^0.8.4;
 import "./@openzeppelin/Context.sol";
 
 contract ZertiCollection is Context {
-    
+
     struct Collection {
         address entity;
         string data;
@@ -19,10 +19,10 @@ contract ZertiCollection is Context {
     mapping(uint256 => Collection) public collections; //id => Collection
     uint256 public collectionNonce;
 
-    error NotOwner(address account, uint256 id);
+    error Unauthorized(address account, uint256 id);
 
     modifier isOwner(address _account, uint256 _id) {
-        if (_account != collections[_id].entity) revert NotOwner(_account, _id);
+        if (_account != collections[_id].entity) revert Unauthorized(_account, _id);
         _;
     }
 

@@ -8,13 +8,13 @@
 
 pragma solidity ^0.8.4;
 
-import "./ISBTDoubleSig.sol";
+import "./ISBTDS.sol";
 import "../@openzeppelin/Context.sol";
 
 /* import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol"; */
 
-contract SBTDoubleSig is Context, ISBTDoubleSig {
+contract SBTDS is Context, ISBTDS {
     uint256 private nonce;
     // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
     string private _uri;

@@ -7,12 +7,12 @@
  */
 pragma solidity ^0.8.4;
 
-import "./SBT/ISBTDoubleSig.sol";
-import "./SBT/SBTDoubleSig.sol";
+import "./SBT/ISBTDS.sol";
+import "./SBT/SBTDS.sol";
 import "./IVF.sol";
 import "./Collection.sol";
 
-contract Badge is SBTDoubleSig, ZertiCollection{
+contract Badge is SBTDS, ZertiCollection{
 
     address internal voteFactory;
    
@@ -21,7 +21,7 @@ contract Badge is SBTDoubleSig, ZertiCollection{
 
     error NotAnEntity(address _sender);
 
-    constructor(string memory _uri) SBTDoubleSig(_uri) {
+    constructor(string memory _uri) SBTDS(_uri) {
         _mint(msg.sender, _uri);
     }
 
