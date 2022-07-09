@@ -8,7 +8,7 @@ pragma solidity ^0.8.4;
 interface ISBTDoubleSig {
 
     /**
-     * @dev Emitted when '_id' token is transferred from '_from' to '_to'.
+     * @dev Emitted when `_id` token is transferred from `_from` to `_to`.
      */
     event TokenTransfer(
         address indexed _from,
@@ -17,7 +17,7 @@ interface ISBTDoubleSig {
     );
 
     /**
-     * @dev Emitted when '_newOwner' claims or rejects pending '_tokenId'.
+     * @dev Emitted when `_newOwner` claims or rejects pending `_tokenId`.
      */
     event TokenClaimed(
         address indexed _newOwner,
@@ -70,11 +70,11 @@ interface ISBTDoubleSig {
      *
      * Requirements:
      *
-     * - '_from' cannot be the zero address.
-     * - '_to' cannot be the zero address.
-     * '_to' MUST NOT have a pending token under '_id'.
-     * '_from' Must be the minter(owner before assigning '_tokenId' as pending to '_to' ) of '_id'
-     * - '_to' cannot own a token under _id at call.
+     * - `_from` cannot be the zero address.
+     * - `_to` cannot be the zero address.
+     * `_to` MUST NOT have a pending token under `_id`.
+     * `_from` Must be the minter(owner before assigning `_tokenId` as pending to `_to` ) of `_id`
+     * - `_to` cannot own a token under _id at call.
      *
      * Emits a {TokenTransfer} event.
      *
@@ -83,7 +83,7 @@ interface ISBTDoubleSig {
     function transfer(uint256 _id , address _to) external returns (bool);
 
     /**
-     * @dev Transfers '_id' token from '_from' to every address at '_to[]'.
+     * @dev Transfers `_id` token from `_from` to every address at `_to[]`.
      *
      * Requirements: See {transfer}
      *
