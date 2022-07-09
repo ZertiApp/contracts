@@ -31,7 +31,7 @@ interface ISBTDoubleSig {
     function uri() external view returns (string memory);
 
     /**
-     * @dev get ownerOf a toke, given an ID
+     * @dev get ownerOf a tokem, given an ID
      * @param _id uint256 of the ID to be queried
      * @return address address of the owner of the given ID.
      */
