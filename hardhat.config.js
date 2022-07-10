@@ -1,12 +1,12 @@
 const { config } = require("dotenv");
 
 require("dotenv").config();
-require('hardhat-docgen');
+require("hardhat-docgen");
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
-const { ENV } = require("./config")
+const { ENV } = require("./config");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -33,22 +33,29 @@ module.exports = {
           optimizer: {
             enabled: true,
             runs: 1000,
-          }
-        }
+          },
+        },
       },
     ],
   },
+  networks: {
+    mumbai: {
+      url: "https://rpc-mumbai.maticvigil.com",
+      accounts: ENV["TEST_ACCOUNT_PK"],
+    },
+  },
   gasReporter: {
     enabled: true,
-    currency: "USD", 
+    currency: "USD",
     token: "MATIC",
     showTimeSpent: true,
     /* outputFile: "docs/this.gasReporter.txt",
     noColors:true, */
-    gasPriceApi: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice", 
+    gasPriceApi:
+      "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
     coinmarketcap: ENV["COINMARKETCAP_API_KEY"],
   },
   etherscan: {
     apiKey: ENV["POLYGONSCAN_API_KEY"],
-  }, 
+  },
 };
