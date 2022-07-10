@@ -28,16 +28,10 @@ contract Badge is SBTDS, ZertiCollection{
     /**
      * @dev see {SBTDoubleSig-_mint}
      */
-    function _mint(address _account, string memory _data) internal override {
-        if(!IVF(voteFactory).isEntity(_account))
+     function mint(string memory _data) external {
+        if(!IVF(voteFactory).isEntity(msg.sender))
                 revert NotAnEntity(msg.sender);
-        unchecked {
-            ++nonce;
-        }
-        tokens[nonce] = Token(_account, _data);
-        amount[nonce] = 0;
-        _createCollection(_account, _data);
-        emit TokenTransfer(address(0), msg.sender, nonce);
-    }
+        _mint(msg.sender, _data);
+     }
 
 }

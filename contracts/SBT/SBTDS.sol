@@ -10,11 +10,12 @@ pragma solidity ^0.8.4;
 
 import "./ISBTDS.sol";
 import "../@openzeppelin/Context.sol";
+import "../@openzeppelin/ERC165.sol";
 
 /* import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol"; */
 
-contract SBTDS is Context, ISBTDS {
+contract SBTDS is Context, ERC165, ISBTDS {
     uint256 private nonce;
     // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
     string private _uri;
@@ -36,6 +37,16 @@ contract SBTDS is Context, ISBTDS {
      */
     constructor(string memory uri_) {
         _setURI(uri_);
+    }
+
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
+        return
+            interfaceId == type(ISBTDS).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /**
