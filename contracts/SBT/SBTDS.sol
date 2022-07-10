@@ -350,9 +350,9 @@ contract SBTDS is Context, ISBTDS {
     }
 
     /**
-     * @dev Hook that is called before any minting of tokens.
+     * @dev Hook that is called before any transfer of tokens. This includes minting and burning.
      * @param _from the address who will make the token transfer
-     * @param _to the address who will received the token transfer
+     * @param _to the address who will receive the token transfer
      * @param _id the token id
      * @param _amount the amount of tokens that will be transfered
      */
