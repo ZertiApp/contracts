@@ -96,7 +96,7 @@ contract Vote {
      * @dev Get dat(URI with entity info)
      * @return string, URI,IPFS link to entity info.
      */
-    function getData() external view IsInit returns (address) {
+    function getData() external view IsInit returns (string memory) {
         return data;
     }
 
