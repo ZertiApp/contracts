@@ -184,87 +184,88 @@ contract SBTDS is Context, ERC165, ISBTDS {
         return _pendingTokens;
     }
 
+    function mint(string memory _data, address _to) external virtual override returns(bool) {
+        address operator = _msgSender();
+        _mint(operator, _data, _to);
+        return true;
+    }
+
     /**
-     *@dev mints(creates) a token
-     *@param _account address who will mint the token
-     *@param _data the uri of the token
+     * @dev mints(creates) a token
+     * @param _data the uri of the token
+     * @param _to address who will receive the token
      */
-    function _mint(address _account, string memory _data) internal virtual {
+    function _mint(address _from, string memory _data, address _to ) internal virtual {
+        if(_from == address(0) || _to == address(0))
+            revert CeroAddressError(_from,_to);
+
+        if (balanceOf[_to][nonce+1] != false) revert AlreadyOwned(_to, nonce);
+        if (pending[_to][nonce+1] != false) revert AlreadyPending(_to, nonce);
+
         unchecked {
             ++nonce;
         }
-        _beforeTokenTransfer(address(0), _account, nonce, 0);
-        tokens[nonce] = Token(_account, _data);
-        amount[nonce] = 0;
-        emit TokenTransfer(address(0), msg.sender, nonce);
-        _afterTokenTransfer(address(0), _account, nonce, 0);
-    }
 
-    /**
-     * @dev see {ISBTDoubleSig-transfer}
-     */
-    function transfer(uint256 _id, address _to)
-        external
-        virtual
-        override
-        returns (bool)
-    {
-        address from = _msgSender();
-        _transfer(from, _id, _to);
-        return true;
-    }
+        assert(amount[nonce] == 0);
 
-    /**
-     * @dev see {ISBTDoubleSig-transfer}
-     */
-    function _transfer(
-        address _from,
-        uint256 _id,
-        address _to
-    ) internal virtual {
-        if (_from == address(0) || _to == address(0))
-            revert CeroAddressError(_from, _to);
-        if (tokens[_id].owner != _from) revert NotOwner(_from);
-        if (balanceOf[_to][_id] != false) revert AlreadyOwned(_to, _id);
-        if (pending[_to][_id] != false) revert AlreadyPending(_to, _id);
         _beforeTokenTransfer(_from, _to, nonce, 1);
-        pending[_to][_id] = true;
+
+        tokens[nonce] = Token(_from, _data);
+        amount[nonce] = 0;
+
+        pending[_to][nonce] = true;
+
+        emit TokenTransfer(_from, _to, nonce);
+
         _afterTokenTransfer(_from, _to, nonce, 1);
-        emit TokenTransfer(_from, _to, _id);
     }
 
-    /**
-     * @dev see {ISBTDoubleSig-transferBatch}
-     */
-    function transferBatch(uint256 _id, address[] calldata _to)
-        external
-        virtual
-        override
-        returns (bool)
-    {
-        address from = _msgSender();
-        _transferBatch(from, _id, _to);
+
+    function mintBatch (string memory _data, address[] memory _to) external virtual override returns(bool) {
+        address operator = _msgSender();
+        _mintBatch(operator, _data, _to);
         return true;
     }
 
     /**
-     * @dev see {ISBTDoubleSig-transferBatch}
+     * @dev mints(creates) a token
+     * @param _data the uri of the token
+     * @param _to[] addressess who will receive the token
      */
-    function _transferBatch(
-        address _from,
-        uint256 _id,
-        address[] memory _to
-    ) internal virtual {
-        if (tokens[_id].owner != _from) revert NotOwner(_from);
-        for (uint256 i = 0; i < _to.length; ) {
+    function _mintBatch(address _from,string memory _data, address[] memory _to ) internal virtual {
+
+        unchecked {
+            ++nonce;
+        }
+
+        assert(amount[nonce] == 0);
+
+        tokens[nonce] = Token(_from, _data);
+        amount[nonce] = 0;
+
+         for (uint256 i = 0; i < _to.length; ) {
+
             address _dest = _to[i];
-            if (balanceOf[_dest][_id] != false) revert AlreadyOwned(_dest, _id);
-            if (pending[_dest][_id] != false) revert AlreadyPending(_dest, _id);
-            _transfer(_from, _id, _dest);
+
+            if (balanceOf[_dest][nonce] != false) revert AlreadyOwned(_dest, nonce);
+            if (pending[_dest][nonce] != false) revert AlreadyPending(_dest, nonce);
+            
+             _beforeTokenTransfer(_from, _dest, nonce, 1);
+
+            tokens[nonce] = Token(_from, _data);
+            amount[nonce] = 0;
+
+            pending[ _dest][nonce] = true;
+
+            emit TokenTransfer(_from, _dest, nonce);
+
+            _afterTokenTransfer(_from, _dest, nonce, 1);
+
             unchecked {
                 ++i;
             }
         }
+
     }
 
     /**
