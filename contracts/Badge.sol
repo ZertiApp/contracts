@@ -22,7 +22,6 @@ contract Badge is SBTDS, ZertiCollection{
     error NotAnEntity(address _sender);
 
     constructor(string memory _uri) SBTDS(_uri) {
-        _mint(msg.sender, _uri);
     }
 
     /**
