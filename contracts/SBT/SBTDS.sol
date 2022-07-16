@@ -19,10 +19,10 @@ contract SBTDS is Context, ERC165, ISBTDS {
     uint256 private nonce;
     // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
     string private _uri;
-    mapping(uint256 => Token) public tokens; // id to Token
-    mapping(uint256 => uint256) public amount; // the amounts of tokens for each Token
-    mapping(address => mapping(uint256 => bool)) public balanceOf; // if owner has a specific Token
-    mapping(address => mapping(uint256 => bool)) public pending; // if owner has pending a specific Token
+    mapping(uint256 => Token) internal tokens; // id to Token
+    mapping(uint256 => uint256) internal amount; // the amounts of tokens for each Token
+    mapping(address => mapping(uint256 => bool)) internal balanceOf; // if owner has a specific Token
+    mapping(address => mapping(uint256 => bool)) internal pending; // if owner has pending a specific Token
 
     /**
      * @dev Main token struct.
