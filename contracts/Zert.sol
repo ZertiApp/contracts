@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 
 /**
- * @title Badge contract
+ * @title Zert contract
  * @author Zerti Team - Matias Arazi
- * @notice Badge contract use for storing your badges as SBTs
+ * @notice Zert contract use for storing your Zerts as SBTs
  */
 pragma solidity ^0.8.4;
 
@@ -12,11 +12,11 @@ import "./SBT/SBTDS.sol";
 import "./IVF.sol";
 import "./Collection.sol";
 
-contract Badge is SBTDS, ZertiCollection{
+contract Zert is SBTDS, ZertiCollection{
 
     address internal voteFactory;
    
-    mapping(uint256 => uint256) public badgeCollection; //BadgeId => CollectionId
+    mapping(uint256 => uint256) public ZertCollection; //ZertId => CollectionId
     
 
     error NotAnEntity(address _sender);
