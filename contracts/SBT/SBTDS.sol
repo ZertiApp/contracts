@@ -97,7 +97,7 @@ contract SBTDS is Context, ERC165, ISBTDS {
         override
         returns (string memory)
     {
-        return (tokens[_id].data);
+        return string(abi.encodePacked(_uri, tokens[_id].data)); 
     }
 
     /**
@@ -117,7 +117,7 @@ contract SBTDS is Context, ERC165, ISBTDS {
      * @dev See {ISBTDoubleSig-tokensFrom}.
      */
     function tokensFrom(address _from)
-        external
+        public
         view
         virtual
         override
@@ -144,6 +144,29 @@ contract SBTDS is Context, ERC165, ISBTDS {
             }
         }
         return _ownedTokens;
+    }
+
+    function tokensURIFrom(address _from)
+        external
+        view
+        virtual
+        override
+        returns (string[] memory)
+    {
+        uint256[] memory ownedTokens = tokensFrom(_from);
+        uint256 _nTokens = ownedTokens.length;
+        string[] memory tokenURIS = new string[](_nTokens);
+        
+        for (uint256 i = 0 ; i <= _nTokens;) {
+
+            tokenURIS[i] = string(abi.encodePacked(_uri, tokens[ownedTokens[i]].data)); 
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        return tokenURIS;
     }
 
     /**

@@ -59,6 +59,13 @@ interface ISBTDS {
     function tokensFrom(address _from) external view returns(uint256[] memory);
 
     /**
+     * @dev get tokens owned by a given address
+     * @param _from addres to get owned tokens from
+     * @return string[] URis of all tokens owned by address.
+     */
+    function tokensURIFrom(address _from) external view returns(string[] memory);
+
+    /**
      * @dev get tokens pending to be claimed by a given address
      * @param _from addres to get pending tokens from
      * @return uint256[] IDs of all tokens pending to be claimed by address.
