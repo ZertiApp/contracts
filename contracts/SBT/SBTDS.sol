@@ -26,9 +26,11 @@ contract SBTDS is Context, ERC165, ISBTDS {
 
     /**
      * @dev Main token struct.
+     * @param creator Minter/Creator of the token
+     * @param data IPFS Hash of the token
      */
     struct Token {
-        address owner;
+        address creator;
         string data;
     }
 
@@ -39,11 +41,16 @@ contract SBTDS is Context, ERC165, ISBTDS {
         _setURI(uri_);
     }
 
-
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
         return
             interfaceId == type(ISBTDS).interfaceId ||
             super.supportsInterface(interfaceId);
@@ -58,15 +65,6 @@ contract SBTDS is Context, ERC165, ISBTDS {
     error CanNotClaim(address _account, uint256 _id);
     error CeroAddressError(address _account1, address _account2);
 
-    /* 
-     * @dev See {IERC165-supportsInterface}.
-     *
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return
-            interfaceId == type(ISBTDoubleSig).interfaceId ||
-            super.supportsInterface(interfaceId);
-    } */
-
     /**
      * @dev See {ISBTDoubleSig-uri}.
      */
@@ -77,14 +75,14 @@ contract SBTDS is Context, ERC165, ISBTDS {
     /**
      * @dev See {ISBTDoubleSig-ownerOf}.
      */
-    function ownerOf(uint256 _id)
+    function creatorOf(uint256 _id)
         external
         view
         virtual
         override
         returns (address)
     {
-        return (tokens[_id].owner);
+        return (tokens[_id].creator);
     }
 
     /**
@@ -97,7 +95,7 @@ contract SBTDS is Context, ERC165, ISBTDS {
         override
         returns (string memory)
     {
-        return string(abi.encodePacked(_uri, tokens[_id].data)); 
+        return string(abi.encodePacked(_uri, tokens[_id].data));
     }
 
     /**
@@ -156,10 +154,11 @@ contract SBTDS is Context, ERC165, ISBTDS {
         uint256[] memory ownedTokens = tokensFrom(_from);
         uint256 _nTokens = ownedTokens.length;
         string[] memory tokenURIS = new string[](_nTokens);
-        
-        for (uint256 i = 0 ; i <= _nTokens;) {
 
-            tokenURIS[i] = string(abi.encodePacked(_uri, tokens[ownedTokens[i]].data)); 
+        for (uint256 i = 0; i <= _nTokens; ) {
+            tokenURIS[i] = string(
+                abi.encodePacked(_uri, tokens[ownedTokens[i]].data)
+            );
 
             unchecked {
                 ++i;
@@ -226,15 +225,9 @@ contract SBTDS is Context, ERC165, ISBTDS {
     /**
      * @dev see {ISBTDoubleSig-transfer}
      */
-    function transfer(uint256 _id, address _to)
-        external
-        virtual
-        override
-        returns (bool)
-    {
+    function transfer(uint256 _id, address _to) external virtual override {
         address from = _msgSender();
         _transfer(from, _id, _to);
-        return true;
     }
 
     /**
@@ -247,7 +240,7 @@ contract SBTDS is Context, ERC165, ISBTDS {
     ) internal virtual {
         if (_from == address(0) || _to == address(0))
             revert CeroAddressError(_from, _to);
-        if (tokens[_id].owner != _from) revert NotOwner(_from);
+        if (tokens[_id].creator != _from) revert NotOwner(_from);
         if (balanceOf[_to][_id] != false) revert AlreadyOwned(_to, _id);
         if (pending[_to][_id] != false) revert AlreadyPending(_to, _id);
         _beforeTokenTransfer(_from, _to, nonce, 1);
@@ -263,11 +256,9 @@ contract SBTDS is Context, ERC165, ISBTDS {
         external
         virtual
         override
-        returns (bool)
     {
         address from = _msgSender();
         _transferBatch(from, _id, _to);
-        return true;
     }
 
     /**
@@ -278,16 +269,19 @@ contract SBTDS is Context, ERC165, ISBTDS {
         uint256 _id,
         address[] memory _to
     ) internal virtual {
-        if (tokens[_id].owner != _from) revert NotOwner(_from);
+        if (tokens[_id].creator != _from) revert NotOwner(_from);
+        _beforeBatchTokenTransfer(_from, _to, _id, _to.length);
         for (uint256 i = 0; i < _to.length; ) {
             address _dest = _to[i];
             if (balanceOf[_dest][_id] != false) revert AlreadyOwned(_dest, _id);
             if (pending[_dest][_id] != false) revert AlreadyPending(_dest, _id);
-            _transfer(_from, _id, _dest);
+            pending[_dest][_id] = true;
             unchecked {
                 ++i;
             }
         }
+        emit BatchTokenTransfer(_from, _to, _id);
+        _afterBatchTokenTransfer(_from, _to, _id, _to.length);
     }
 
     /**
@@ -408,6 +402,35 @@ contract SBTDS is Context, ERC165, ISBTDS {
     function _afterTokenTransfer(
         address _from,
         address _to,
+        uint256 _id,
+        uint256 _amount
+    ) internal virtual {}
+
+    /**
+     * @dev Hook that is called before any transfer of tokens. This includes minting and burning.
+     * @param _from the address who will make the token transfer
+     * @param _to the address who will receive the token transfer
+     * @param _id the token id
+     * @param _amount the amount of tokens that will be transfered
+     */
+    function _beforeBatchTokenTransfer(
+        address _from,
+        address[] memory _to,
+        uint256 _id,
+        uint256 _amount
+    ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any transfer of tokens. This includes
+     * minting and burning.
+     * @param _from the address who has make the token transfer
+     * @param _to the address who has received the token transfer
+     * @param _id the token id
+     * @param _amount the amount of tokens that was transfered
+     */
+    function _afterBatchTokenTransfer(
+        address _from,
+        address[] memory _to,
         uint256 _id,
         uint256 _amount
     ) internal virtual {}
