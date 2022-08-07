@@ -25,7 +25,8 @@ contract BadgeZerti is SBTDS {
      * @dev see {SBTDoubleSig-_mint}
      */
     function mint(string memory _data) external {
-        _mint(msg.sender, _data);
+        address account = _msgSender();
+        _mint(account, _data);
     }
 
     /**
