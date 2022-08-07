@@ -366,7 +366,7 @@ contract SBTDS is Context, ERC165, ISBTDS {
      * - There must be at least one token under `_id`
      */
     function _burn(address _account, uint256 _id) internal virtual {
-        if (balanceOf[_account][_id] != true) revert NotOwner(_account);
+        if (balanceOf[_account][_id] == true) revert NotOwner(_account);
         if (amount[_id] <= 0) revert CanNotClaim(_account, _id);
         _beforeTokenTransfer(_account, address(0), _id, 1);
         balanceOf[_account][_id] = false;
