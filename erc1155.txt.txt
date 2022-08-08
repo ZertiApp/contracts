@@ -1,0 +1,305 @@
+//SPDX-License-Identifier: MIT
+
+/**
+ * @title Token contract
+ * @author Matias Arazi & Lucas Grasso Ramos
+ * @notice MultiSig, Semi-Fungible, SoulBound Token standard for academic certification.
+ */
+
+pragma solidity ^0.8.4;
+
+
+import "./ISBTDS.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract SBTDS is Context, ERC165, IERC1155  {
+    uint256 private nonce;
+    // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
+    string private _uri;
+    mapping(uint256 => Token) internal tokens; // id to Token
+    mapping(address => mapping(uint256 => bool)) internal _balances; // if owner has a specific Token
+    mapping(address => mapping(uint256 => bool)) internal pending; // if owner has pending a specific Token
+
+    /**
+     * @dev Main token struct.
+     * @param creator Minter/Creator of the token
+     * @param data IPFS Hash of the token
+     */
+    struct Token {
+        address creator;
+        string data;
+    }
+
+    /**
+     * @dev See {_setURI}.
+     */
+    constructor(string memory uri_) {
+        _setURI(uri_);
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev See {IERC1155MetadataURI-uri}.
+     *
+     * This implementation returns the same URI for *all* token types. It relies
+     * on the token type ID substitution mechanism
+     * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
+     *
+     * Clients calling this function must replace the `\{id\}` substring with the
+     * actual token type ID.
+     */
+    function uri(uint256) public view virtual returns (string memory) {
+        return _uri;
+    }
+
+    /**
+     * @dev See {IERC1155-balanceOf}.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     */
+    function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
+        require(account != address(0), "ERC1155: address zero is not a valid owner");
+        if(_balances[account][id]) {
+            return 1;  
+        }
+        else {
+            return 0;
+        }
+        
+    }
+
+    /**
+     * @dev See {IERC1155-balanceOfBatch}.
+     *
+     * Requirements:
+     *
+     * - `accounts` and `ids` must have the same length.
+     */
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
+        public
+        view
+        virtual
+        override
+        returns (uint256[] memory)
+    {
+        require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
+
+        uint256[] memory batchBalances = new uint256[](accounts.length);
+
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            batchBalances[i] = balanceOf(accounts[i], ids[i]);
+        }
+
+        return batchBalances;
+    }
+
+    /**
+     * @dev See {IERC1155-setApprovalForAll}.
+     */
+    function setApprovalForAll(address operator, bool approved) public virtual override {}
+
+    /**
+     * @dev See {IERC1155-isApprovedForAll}.
+     */
+    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {}
+
+
+    /**
+     * @dev See {ISBTDoubleSig-ownerOf}.
+     */
+    function creatorOf(uint256 _id)
+        external
+        view
+        virtual
+        returns (address)
+    {
+        return (tokens[_id].creator);
+    }
+
+    /**
+     * @dev See {ISBTDoubleSig-uriOf}.
+     */
+    function uriOf(uint256 _id)
+        external
+        view
+        virtual
+        returns (string memory)
+    {
+        return string(abi.encodePacked(_uri, tokens[_id].data));
+    }
+
+    /**
+     * @dev See {ISBTDoubleSig-tokensFrom}.
+     */
+    function tokensFrom(address _from)
+        public
+        view
+        virtual
+        returns (uint256[] memory)
+    {
+        uint256 _tokenCount = 0;
+        for (uint256 i = 1; i <= nonce; ) {
+            if (_balances[_from][i]) {
+                unchecked {
+                    ++_tokenCount;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        uint256[] memory _ownedTokens = new uint256[](_tokenCount);
+        for (uint256 i = 1; i <= nonce; ) {
+            if (_balances[_from][i]) {
+                _ownedTokens[--_tokenCount] = i;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        return _ownedTokens;
+    }
+
+    function tokensURIFrom(address _from)
+        external
+        view
+        virtual
+        returns (string[] memory)
+    {
+        (uint256[] memory ownedTokens) = tokensFrom(_from);
+        uint256 _nTokens = ownedTokens.length;
+        string[] memory tokenURIS = new string[](_nTokens);
+        
+        for (uint256 i = 0; i < _nTokens; ) {
+            tokenURIS[i] = string(
+                abi.encodePacked(_uri, tokens[ownedTokens[i]].data)
+            );
+
+            unchecked {
+                ++i;
+            }
+        } 
+        return tokenURIS;
+    }
+
+    /**
+     *@dev mints(creates) a token
+     *@param _account address who will mint the token
+     *@param _data the uri of the token
+     */
+    function _mint(address _account, string memory _data) internal virtual {
+        unchecked {
+            ++nonce;
+        }
+
+        address operator = _msgSender();
+        uint256[] memory ids = _asSingletonArray(nonce);
+        uint256[] memory amounts = _asSingletonArray(1);
+
+        _beforeTokenTransfer(operator, address(0), operator, ids, amounts);
+        tokens[nonce] = Token(_account, _data);
+        emit TransferSingle(operator, address(0), operator, nonce, 1);
+        _afterTokenTransfer(operator, address(0), operator, ids, amounts);
+    }
+
+     /**
+     * @dev Hook that is called before any token transfer. This includes minting
+     * and burning, as well as batched variants.
+     *
+     * The same hook is called on both single and batched variants. For single
+     * transfers, the length of the `ids` and `amounts` arrays will be 1.
+     *
+     * Calling conditions (for each `id` and `amount` pair):
+     *
+     * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * of token type `id` will be  transferred to `to`.
+     * - When `from` is zero, `amount` tokens of token type `id` will be minted
+     * for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * will be burned.
+     * - `from` and `to` are never both zero.
+     * - `ids` and `amounts` have the same, non-zero length.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any token transfer. This includes minting
+     * and burning, as well as batched variants.
+     *
+     * The same hook is called on both single and batched variants. For single
+     * transfers, the length of the `id` and `amount` arrays will be 1.
+     *
+     * Calling conditions (for each `id` and `amount` pair):
+     *
+     * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * of token type `id` will be  transferred to `to`.
+     * - When `from` is zero, `amount` tokens of token type `id` will be minted
+     * for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * will be burned.
+     * - `from` and `to` are never both zero.
+     * - `ids` and `amounts` have the same, non-zero length.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _afterTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal virtual {}
+
+    /**
+     * @dev Sets a new URI for all token types, by relying on the token type ID
+     * substitution mechanism
+     * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
+     *
+     * By this mechanism, any occurrence of the `\{id\}` substring in either the
+     * URI or any of the amounts in the JSON file at said URI will be replaced by
+     * clients with the token type ID.
+     *
+     * For example, the `https://token-cdn-domain/\{id\}.json` URI would be
+     * interpreted by clients as
+     * `https://token-cdn-domain/000000000000000000000000000000000000000000000000000000000004cce0.json`
+     * for token type ID 0x4cce0.
+     *
+     * See {uri}.
+     *
+     * Because these URIs cannot be meaningfully represented by the {URI} event,
+     * this function emits no events.
+     */
+    function _setURI(string memory newuri) internal virtual {
+        _uri = newuri;
+    }
+
+    function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
+        uint256[] memory array = new uint256[](1);
+        array[0] = element;
+
+        return array;
+    }
+}
