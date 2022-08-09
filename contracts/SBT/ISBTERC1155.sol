@@ -17,9 +17,7 @@ interface ISBTERC1155 {
     function tokensURIFrom(address _from) external view returns (string[] memory);
 
     function tokensFrom(address _from) external view returns (uint256[] memory);
-
-    function uriOf(uint256 _id) external view returns (string memory);
-
+    
     function claimOrReject(uint256 _id,bool _action) external;
 
     function safeMultiTransfer (address from, address[] memory to, uint256 id) external;

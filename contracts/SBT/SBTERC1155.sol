@@ -11,6 +11,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155MetadataURI.sol";
 import "./ISBTERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
