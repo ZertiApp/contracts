@@ -152,6 +152,7 @@ contract SBTDS is Context, ERC165, IERC1155, ISBTERC1155{
         external
         view
         virtual
+        override
         returns (string[] memory)
     {
         (uint256[] memory ownedTokens) = tokensFrom(_from);
@@ -275,7 +276,7 @@ contract SBTDS is Context, ERC165, IERC1155, ISBTERC1155{
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) external override {
+    ) internal {
 
         address operator = _msgSender();
 
@@ -350,12 +351,12 @@ contract SBTDS is Context, ERC165, IERC1155, ISBTERC1155{
      *
      */
     function _claimOrReject(address _account, bool action, uint256 _id) internal virtual {
-        require(balanceOf[_account][_id] == false, "SBTERC1155: caller already owns id");
+        require(_balances[_account][_id] == false, "SBTERC1155: caller already owns id");
         require(pending[_account][_id] == true, "SBTERC1155: caller has not id pending ");
 
         _beforeTokenClaim(_account, _id);
 
-        balanceOf[_account][_id] = action;
+        _balances[_account][_id] = action;
         pending[_account][_id] = false;
 
         emit TokenClaimed(_account, _id);
@@ -372,7 +373,7 @@ contract SBTDS is Context, ERC165, IERC1155, ISBTERC1155{
      * - `account` must have `_id` token.
      */
     function _burn(address _account, uint256 id) internal virtual {
-        require(balanceOf[_account][id] == true, "SBTERC1155: caller not owner");
+        require(_balances[_account][id] == true, "SBTERC1155: caller not owner");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
@@ -380,7 +381,7 @@ contract SBTDS is Context, ERC165, IERC1155, ISBTERC1155{
 
         _beforeTokenTransfer(operator, operator, address(0), ids, amounts,"");
 
-        balanceOf[_account][id] = false;
+        _balances[_account][id] = false;
 
         emit TransferSingle(operator, operator, address(0), id, 1);
         _beforeTokenTransfer(operator, operator, address(0), ids, amounts,"");
