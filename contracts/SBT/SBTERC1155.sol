@@ -260,12 +260,12 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
         uint256[] memory ids = _asSingletonArray(id);
         uint256[] memory amounts = _asSingletonArray(amount);
 
-        _beforeTokenTransfer(operator, from, to, ids, amounts,data);
+        _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         pending[to][id] = true;
 
-        emit TransferSingle(operator, operator, to, nonce, amount);
-        _afterTokenTransfer(operator, from, to, ids, amounts,data);
+        emit TransferSingle(operator, from, to, nonce, amount);
+        _afterTokenTransfer(operator, from, to, ids, amounts, data);
 
     }
 
@@ -294,7 +294,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
 
         emit TransferBatch(operator, from, to, ids, amounts);
 
-        _afterTokenTransfer(operator, from, to, ids, amounts,data);
+        _afterTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /**
@@ -307,25 +307,35 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
     ) internal virtual {
         require(from == tokens[id].creator, "SBTERC1155: caller is not creator");
 
-        uint256 TotalDestinataries = to.length;
+        uint256 _totalDestinataries = to.length;
 
-        for (uint256 i = 0; i < TotalDestinataries; ) {
+        address operator = _msgSender();
+        uint256[] memory ids = _asSingletonArray(id);
+        uint256[] memory amounts = _asSingletonArray(1);
+        
+
+        for (uint256 i = 0; i < _totalDestinataries; ) {
             address _dest = to[i];
             require(_dest != address(0), "SBTERC1155: transfer to the zero address");
-        }
-
-        for (uint256 i = 0; i < to.length; ) {
-            address _dest = to[i];
-
             require(_balances[_dest][id] == false, "SBTERC1155: Already owned");
             require(pending[_dest][id] == false, "SBTERC1155: Already pending");
+        }
+
+        for (uint256 i = 0; i < _totalDestinataries; ) {
+            address _dest = to[i];
+
+            _beforeTokenTransfer(operator, from, _dest, ids, amounts, "");
 
             pending[_dest][id] = true;
+
+            _afterTokenTransfer(operator, from, _dest, ids, amounts, "");
 
             unchecked {
                 ++i;
             }
         }
+
+        emit TransferMulti(from, to, id);
     }
 
     /**

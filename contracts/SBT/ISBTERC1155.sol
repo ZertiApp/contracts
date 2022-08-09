@@ -10,7 +10,9 @@ interface ISBTERC1155 {
     /**
      * @dev Emitted when `_newOwner` claims or rejects pending `_tokenId`.
      */
-    event TokenClaimed(address indexed _newOwner, uint256 _id);
+    event TokenClaimed(address indexed newOwner, uint256 id);
+
+    event TransferMulti(address indexed from, address[] indexed to, uint256 indexed id);
 
     function tokensURIFrom(address _from) external view returns (string[] memory);
 
