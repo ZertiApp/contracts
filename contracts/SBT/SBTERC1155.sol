@@ -13,9 +13,10 @@ import "./ISBTDS.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "./ISBTERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SBTDS is Context, ERC165, IERC1155 {
+contract SBTDS is Context, ERC165, IERC1155, ISBTERC1155{
 
     uint256 private nonce;
 
@@ -54,6 +55,7 @@ contract SBTDS is Context, ERC165, IERC1155 {
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(ISBTERC1155).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -101,24 +103,13 @@ contract SBTDS is Context, ERC165, IERC1155 {
     }
 
     /**
-     * @dev See {ISBTDoubleSig-ownerOf}.
-     */
-    function creatorOf(uint256 _id)
-        external
-        view
-        virtual
-        returns (address)
-    {
-        return (tokens[_id].creator);
-    }
-
-    /**
      * @dev See {ISBTDoubleSig-uriOf}.
      */
     function uriOf(uint256 _id)
         external
         view
         virtual
+        override
         returns (string memory)
     {
         return string(abi.encodePacked(_uri, tokens[_id].data));
@@ -131,6 +122,7 @@ contract SBTDS is Context, ERC165, IERC1155 {
         public
         view
         virtual
+        override
         returns (uint256[] memory)
     {
         uint256 _tokenCount = 0;
@@ -234,7 +226,7 @@ contract SBTDS is Context, ERC165, IERC1155 {
         address from,
         address[] memory to,
         uint256 id
-    ) public virtual {
+    ) external virtual override {
         require(from == tokens[id].creator, "SBTERC1155: caller is not creator");
         _safeMultiTransfer(from, to, id);
     }
@@ -306,7 +298,6 @@ contract SBTDS is Context, ERC165, IERC1155 {
     }
 
     /**
-     * @dev 
      * @dev requirements See {SBTERC1155-safeTransfer}.
      */
     function _safeMultiTransfer(
@@ -337,6 +328,64 @@ contract SBTDS is Context, ERC165, IERC1155 {
         }
     }
 
+    /**
+     * See {ISBTERC1155-_claim}
+     * If action == 1-Claim pending token
+     * If action == 0-Reject pending token
+     */
+    function claimOrReject(uint256 _id,bool _action) external virtual override {
+        address _account = _msgSender();
+        _claimOrReject(_account, _action, _id);
+    }
+
+    /**
+     * @dev Claims or Reject pending `_id` from address `_account`.
+     *
+     * Requirements:
+     * - `_account` cannot be the zero address.
+     * - `_account` MUST have a pending token under `id`.
+     * - `_account` MUST NOT own a token under `id`.
+     *
+     * Emits a {TokenClaimed} event.
+     *
+     */
+    function _claimOrReject(address _account, bool action, uint256 _id) internal virtual {
+        require(balanceOf[_account][_id] == false, "SBTERC1155: caller already owns id");
+        require(pending[_account][_id] == true, "SBTERC1155: caller has not id pending ");
+
+        _beforeTokenClaim(_account, _id);
+
+        balanceOf[_account][_id] = action;
+        pending[_account][_id] = false;
+
+        emit TokenClaimed(_account, _id);
+
+        _afterTokenClaim(_account, _id);
+    }
+
+    /**
+     * @dev Destroys `_id` token from `_account`
+     *
+     * Emits a {Transfer} event with `to` set to the zero address.
+     *
+     * Requirements:
+     * - `account` must have `_id` token.
+     */
+    function _burn(address _account, uint256 id) internal virtual {
+        require(balanceOf[_account][id] == true, "SBTERC1155: caller not owner");
+
+        address operator = _msgSender();
+        uint256[] memory ids = _asSingletonArray(id);
+        uint256[] memory amounts = _asSingletonArray(1);
+
+        _beforeTokenTransfer(operator, operator, address(0), ids, amounts,"");
+
+        balanceOf[_account][id] = false;
+
+        emit TransferSingle(operator, operator, address(0), id, 1);
+        _beforeTokenTransfer(operator, operator, address(0), ids, amounts,"");
+    }
+
     
      /**
      * @dev Hook that is called before any token transfer. This includes minting
@@ -354,7 +403,6 @@ contract SBTDS is Context, ERC165, IERC1155 {
      * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
      * will be burned.
      * - `from` and `to` are never both zero.
-     * - `ids` and `amounts` have the same, non-zero length.
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
@@ -383,7 +431,6 @@ contract SBTDS is Context, ERC165, IERC1155 {
      * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
      * will be burned.
      * - `from` and `to` are never both zero.
-     * - `ids` and `amounts` have the same, non-zero length.
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
@@ -395,6 +442,26 @@ contract SBTDS is Context, ERC165, IERC1155 {
         uint256[] memory amounts,
         bytes memory data
     ) internal virtual {}
+
+     /**
+     * @dev Hook that is called before any token claim.
+     * @param _newOwner the address who will claim or reject the token
+     * @param _id the token id
+     */
+    function _beforeTokenClaim(address _newOwner, uint256 _id)
+        internal
+        virtual
+    {}
+
+    /**
+     * @dev Hook that is called after any token claim.
+     * @param _newOwner the address who has claimed or rejected the token
+     * @param _id the token id
+     */
+    function _afterTokenClaim(address _newOwner, uint256 _id)
+        internal
+        virtual
+    {}
 
     function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
         uint256[] memory array = new uint256[](1);
