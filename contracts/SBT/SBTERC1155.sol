@@ -220,6 +220,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
         require(to != address(0), "SBTERC1155: transfer to the zero address");
         _safeBatchTransferFrom(from, to, ids, amounts, data);
     }
+    
 
     function safeMultiTransfer (
         address from,
@@ -242,7 +243,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
      * acceptance magic value.
      */
-    function _safeTransferFrom(
+    function _safeTransferFrom (
         address from,
         address to,
         uint256 id,
@@ -253,7 +254,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
         require(to != address(0), "SBTERC1155: transfer to the zero address");
         require(amount == 1, "SBTERC1155: can only transfer one token");
         require(_balances[to][id] == false, "SBTERC1155: Already owned");
-        require(pending[to][id] == false, "SBTERC1155: Already owned");
+        require(pending[to][id] == false, "SBTERC1155: Already pending");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
@@ -284,7 +285,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
         
         for(uint256 i = 0; i < totalIds;){
             require(_balances[to][ids[i]] == false, "SBTERC1155: Already owned");
-            require(pending[to][ids[i]] == false, "SBTERC1155: Already owned");
+            require(pending[to][ids[i]] == false, "SBTERC1155: Already pending");
             pending[to][ids[i]] = true;
             unchecked {
                 ++i;
@@ -317,7 +318,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
             address _dest = to[i];
 
             require(_balances[_dest][id] == false, "SBTERC1155: Already owned");
-            require(pending[_dest][id] == false, "SBTERC1155: Already owned");
+            require(pending[_dest][id] == false, "SBTERC1155: Already pending");
 
             pending[_dest][id] = true;
 
@@ -350,7 +351,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
      */
     function _claimOrReject(address _account, bool action, uint256 _id) internal virtual {
         require(_balances[_account][_id] == false, "SBTERC1155: caller already owns id");
-        require(pending[_account][_id] == true, "SBTERC1155: caller has not id pending ");
+        require(pending[_account][_id] == true, "SBTERC1155: caller has not pending under id");
 
         _beforeTokenClaim(_account, _id);
 
@@ -371,7 +372,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
      * - `account` must have `_id` token.
      */
     function _burn(address _account, uint256 id) internal virtual {
-        require(_balances[_account][id] == true, "SBTERC1155: caller not owner");
+        require(_balances[_account][id] == true, "SBTERC1155: caller is not owner");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);

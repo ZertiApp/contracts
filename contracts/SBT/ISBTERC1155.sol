@@ -12,7 +12,6 @@ interface ISBTERC1155 {
      */
     event TokenClaimed(address indexed _newOwner, uint256 _id);
 
-
     function tokensURIFrom(address _from) external view returns (string[] memory);
 
     function tokensFrom(address _from) external view returns (uint256[] memory);
@@ -22,4 +21,5 @@ interface ISBTERC1155 {
     function claimOrReject(uint256 _id,bool _action) external;
 
     function safeMultiTransfer (address from, address[] memory to, uint256 id) external;
+
 }
