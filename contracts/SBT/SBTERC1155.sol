@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "./ISBTERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SBTDS is Context, ERC165, IERC1155, ISBTERC1155{
+contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
 
     uint256 private nonce;
 
