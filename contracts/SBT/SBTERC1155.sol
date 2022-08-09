@@ -11,11 +11,11 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155MetadataURI.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import "./ISBTERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
+contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC1155{
 
     uint256 private nonce;
 
@@ -54,8 +54,22 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
             interfaceId == type(ISBTERC1155).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev See {ISBTDoubleSig-uriOf}.
+     */
+    function uri(uint256 _id)
+        external
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        return string(abi.encodePacked(_uri, tokens[_id].data));
     }
 
     /**
@@ -99,19 +113,6 @@ contract SBTERC1155 is Context, ERC165, IERC1155, ISBTERC1155{
         }
 
         return batchBalances;
-    }
-
-    /**
-     * @dev See {ISBTDoubleSig-uriOf}.
-     */
-    function uriOf(uint256 _id)
-        external
-        view
-        virtual
-        override
-        returns (string memory)
-    {
-        return string(abi.encodePacked(_uri, tokens[_id].data));
     }
 
     /**
