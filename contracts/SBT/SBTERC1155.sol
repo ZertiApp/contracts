@@ -113,7 +113,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         returns (uint256[] memory)
     {
 
-        if(accounts.length != ids.length) revert("accounts and ids length mismatch");
+        if(accounts.length != ids.length) revert("Accounts and ids length mismatch");
 
         uint256[] memory batchBalances = new uint256[](accounts.length);
 
