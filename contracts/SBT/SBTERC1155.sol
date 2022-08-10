@@ -19,7 +19,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
     uint256 private nonce;
 
-    // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
+    // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
     string private _uri;
 
     // Mapping to token id to Token struct[creator, data(IPF-Hash)]
@@ -34,7 +34,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     /**
      * @dev Main token struct.
      * @param creator Minter/Creator of the token
-     * @param data IPFS Hash of the token
+     * @param data IPFS Hash of the token(In order to save gas, do not use the full URI)
      */
     struct Token {
         address creator;
@@ -60,7 +60,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     }
 
     /**
-     * @dev See {ISBTDoubleSig-uriOf}.
+     * @dev See {IERC1155MetadataURI-uri}.
      */
     function uri(uint256 _id)
         external
@@ -116,18 +116,25 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     }
 
     /**
-     * @dev See {ISBTDoubleSig-tokensFrom}.
+     * @dev Get tokens owned by a given address
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     *
      */
-    function tokensFrom(address _from)
+    function tokensFrom(address account)
         public
         view
         virtual
         override
         returns (uint256[] memory)
     {
+        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+
         uint256 _tokenCount = 0;
         for (uint256 i = 1; i <= nonce; ) {
-            if (_balances[_from][i]) {
+            if (_balances[account][i]) {
                 unchecked {
                     ++_tokenCount;
                 }
@@ -138,7 +145,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         }
         uint256[] memory _ownedTokens = new uint256[](_tokenCount);
         for (uint256 i = 1; i <= nonce; ) {
-            if (_balances[_from][i]) {
+            if (_balances[account][i]) {
                 _ownedTokens[--_tokenCount] = i;
             }
             unchecked {
@@ -148,20 +155,97 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         return _ownedTokens;
     }
 
-    function tokensURIFrom(address _from)
+    /**
+     * @dev Get tokens marked as pending of a given address
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     *
+     */
+    function pendingFrom(address account)
         external
         view
         virtual
         override
+        returns (uint256[] memory)
+    {
+        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+
+        uint256 _tokenCount = 0;
+        for (uint256 i = 1; i <= nonce; ) {
+            if (pending[account][i]) {
+                ++_tokenCount;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        uint256[] memory _pendingTokens = new uint256[](_tokenCount);
+        for (uint256 i = 1; i <= nonce; ) {
+            if (pending[account][i]) {
+                _pendingTokens[--_tokenCount] = i;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        return _pendingTokens;
+    }
+
+    /**
+     * @dev Get the URI of the tokens marked as pending of a given address.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     *
+     */
+    function tokensURIFrom(address account)
+        external
+        view
+        virtual
         returns (string[] memory)
     {
-        (uint256[] memory ownedTokens) = tokensFrom(_from);
+        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+        (uint256[] memory ownedTokens) = tokensFrom(account);
         uint256 _nTokens = ownedTokens.length;
         string[] memory tokenURIS = new string[](_nTokens);
         
         for (uint256 i = 0; i < _nTokens; ) {
             tokenURIS[i] = string(
                 abi.encodePacked(_uri, tokens[ownedTokens[i]].data)
+            );
+
+            unchecked {
+                ++i;
+            }
+        } 
+        return tokenURIS;
+    }
+
+    /**
+     * @dev Get the URI of the tokens owned by a given address.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     *
+     */
+    function pendingURIFrom(address account)
+        external
+        view
+        virtual
+        returns (string[] memory)
+    {
+        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+        (uint256[] memory pendingTokens) = pendingFrom(account);
+        uint256 _nTokens = pendingTokens.length;
+        string[] memory tokenURIS = new string[](_nTokens);
+        
+        for (uint256 i = 0; i < _nTokens; ) {
+            tokenURIS[i] = string(
+                abi.encodePacked(_uri, tokens[pendingTokens[i]].data)
             );
 
             unchecked {
@@ -195,8 +279,10 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
     /**
      * @dev See {IERC1155-safeTransferFrom}.
+     *
      * Requirements:
-     * - from must be id creator(minter)
+     * - `from` must be the creator(minter) of `id`.
+     *
      */
     function safeTransferFrom(
         address from,
@@ -210,20 +296,12 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     }
 
     /**
-     * @dev See {SBTERC1155-safeBatchTransfer}.
+     * @dev See {ISBTERC1155-safeMultiTransfer}
+     *
+     * Requirements:
+     * - 'from' must be the creator(minter) of `id`.
+     *
      */
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) external override {
-        require(to != address(0), "SBTERC1155: transfer to the zero address");
-        _safeBatchTransferFrom(from, to, ids, amounts, data);
-    }
-    
-
     function safeMultiTransfer (
         address from,
         address[] memory to,
@@ -240,10 +318,13 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      *
      * Requirements:
      *
-     * - `to` cannot be the zero address.
-     * - `from` must have a balance of tokens of type `id` of at least `amount`.
+     * - `from` must be the creator(minter) of the token under `id`.
+     * - `to` must be non-zero.
+     * - `to` must have the token `id` marked as pending.
+     * - `to` must must not own a token type under `id`.
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
      * acceptance magic value.
+     *
      */
     function _safeTransferFrom (
         address from,
@@ -252,7 +333,6 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         uint256 amount,
         bytes memory data
     ) internal virtual {
-        require(from == tokens[id].creator, "SBTERC1155: caller is not creator");
         require(to != address(0), "SBTERC1155: transfer to the zero address");
         require(amount == 1, "SBTERC1155: can only transfer one token");
         require(_balances[to][id] == false, "SBTERC1155: Already owned");
@@ -271,44 +351,18 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
     }
 
-    function _safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal {
-
-        address operator = _msgSender();
-
-        _beforeTokenTransfer(operator, from, to, ids, amounts, data);
-
-        uint256 totalIds = ids.length;
-        
-        for(uint256 i = 0; i < totalIds;){
-            require(_balances[to][ids[i]] == false, "SBTERC1155: Already owned");
-            require(pending[to][ids[i]] == false, "SBTERC1155: Already pending");
-            pending[to][ids[i]] = true;
-            unchecked {
-                ++i;
-            }
-        }
-
-        emit TransferBatch(operator, from, to, ids, amounts);
-
-        _afterTokenTransfer(operator, from, to, ids, amounts, data);
-    }
-
     /**
-     * @dev requirements See {SBTERC1155-safeTransfer}.
+     * Transfers `_id` token from `_from` to every address at `_to[]`.
+     *
+     * Requirements:
+     * - See {ISBTERC1155-safeMultiTransfer}.
+     *
      */
     function _safeMultiTransfer(
         address from,
         address[] memory to,
         uint256 id
     ) internal virtual {
-        require(from == tokens[id].creator, "SBTERC1155: caller is not creator");
-
         uint256 _totalDestinataries = to.length;
 
         address operator = _msgSender();
@@ -354,25 +408,32 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * @dev Claims or Reject pending `_id` from address `_account`.
      *
      * Requirements:
-     * - `_account` cannot be the zero address.
-     * - `_account` MUST have a pending token under `id`.
-     * - `_account` MUST NOT own a token under `id`.
+     * - `account` cannot be the zero address.
+     * - `account` must have a pending token under `id` at the moment of call.
+     * - `account` mUST not own a token under `id` at the moment of call.
      *
      * Emits a {TokenClaimed} event.
      *
      */
-    function _claimOrReject(address _account, bool action, uint256 _id) internal virtual {
-        require(_balances[_account][_id] == false, "SBTERC1155: caller already owns id");
-        require(pending[_account][_id] == true, "SBTERC1155: caller has not pending under id");
+    function _claimOrReject(address account, bool action, uint256 id) internal virtual {
+        require(_balances[account][id] == false, "SBTERC1155: caller already owns id");
+        require(pending[account][id] == true, "SBTERC1155: caller has not pending under id");
 
-        _beforeTokenClaim(_account, _id);
+        address _newOwner;
+        if(action){
+            _newOwner = account;
+        } else {
+            _newOwner = address(0);
+        }
 
-        _balances[_account][_id] = action;
-        pending[_account][_id] = false;
+        _beforeTokenClaim(_newOwner, id);
 
-        emit TokenClaimed(_account, _id);
+        _balances[account][id] = action;
+        pending[account][id] = false;
 
-        _afterTokenClaim(_account, _id);
+        emit TokenClaimed(_newOwner, id);
+
+        _afterTokenClaim(_newOwner, id);
     }
 
     /**
@@ -408,6 +469,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      *
      * Calling conditions (for each `id` and `amount` pair):
      *
+     * - `amount` will always be and must be equal to 1.
      * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
      * of token type `id` will be  transferred to `to`.
      * - When `from` is zero, `amount` tokens of token type `id` will be minted
@@ -436,6 +498,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      *
      * Calling conditions (for each `id` and `amount` pair):
      *
+     * - `amount` will always be and must be equal to 1.
      * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
      * of token type `id` will be  transferred to `to`.
      * - When `from` is zero, `amount` tokens of token type `id` will be minted
@@ -457,20 +520,34 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
      /**
      * @dev Hook that is called before any token claim.
-     * @param _newOwner the address who will claim or reject the token
-     * @param _id the token id
+     +
+     * Calling conditions (for each `newOwner` and `id` pair):
+     *
+     * - A token under `id` must exist.
+     * - When `newOwner` is non-zero, a token typen under `id` will now be claimed and owned by`to`.
+     * - When `newOwner` is zero, a token typen under `id` will now be rejected.
+     * 
+     * @param newOwner the address who will claim or reject the token
+     * @param id the token id
      */
-    function _beforeTokenClaim(address _newOwner, uint256 _id)
+    function _beforeTokenClaim(address newOwner, uint256 id)
         internal
         virtual
     {}
 
     /**
-     * @dev Hook that is called after any token claim.
-     * @param _newOwner the address who has claimed or rejected the token
-     * @param _id the token id
+     * @dev Hook that is called before any token claim.
+     +
+     * Calling conditions (for each `newOwner` and `id` pair):
+     *
+     * - A token under `id` must exist.
+     * - When `newOwner` is non-zero, a token under `id` will now be claimed and owned by`to`.
+     * - When `newOwner` is zero, a token under `id` will now be rejected.
+     * 
+     * @param newOwner the address who will claim or reject the token
+     * @param id the token id
      */
-    function _afterTokenClaim(address _newOwner, uint256 _id)
+    function _afterTokenClaim(address newOwner, uint256 id)
         internal
         virtual
     {}
@@ -486,11 +563,17 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * @dev Disabled function
      * @dev See {IERC1155-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved) public virtual override {}
+    function setApprovalForAll(address operator, bool approved) public virtual override {revert();}
 
     /**
      * @dev Disabled function
      * @dev See {IERC1155-isApprovedForAll}.
      */
-    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {}
+    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {revert();}
+
+    /**
+     * @dev Disabled function
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(address from,address to,uint256[] memory ids, uint256[] memory amounts, bytes memory data) external override {revert();}
 }
