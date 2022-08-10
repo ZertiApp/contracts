@@ -31,6 +31,14 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     // Mapping from address to mapping id bool that states if address has tokens(under id) awaiting to be claimed
     mapping(address => mapping(uint256 => bool)) internal pending;
 
+    error NotOwner(address addr, uint256 id);
+
+    error AddressZero();
+
+    error AlreadyOwnedOrPending(uint256 id);
+
+    error NotPending(uint256 id);
+
     /**
      * @dev Main token struct.
      * @param creator Minter/Creator of the token
@@ -80,7 +88,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - `account` cannot be the zero address.
      */
     function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
-        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+        if(account == address(0)) revert AddressZero();
         if(_balances[account][id]) {
             return 1;  
         }
@@ -104,7 +112,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         override
         returns (uint256[] memory)
     {
-        require(accounts.length == ids.length, "SBTERC1155: accounts and ids length mismatch");
+
+        if(accounts.length != ids.length) revert("accounts and ids length mismatch");
 
         uint256[] memory batchBalances = new uint256[](accounts.length);
 
@@ -130,7 +139,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         override
         returns (uint256[] memory)
     {
-        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+        if(account == address(0)) revert AddressZero();
 
         uint256 _tokenCount = 0;
         for (uint256 i = 1; i <= nonce; ) {
@@ -170,7 +179,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         override
         returns (uint256[] memory)
     {
-        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+        if(account == address(0)) revert AddressZero();
 
         uint256 _tokenCount = 0;
         for (uint256 i = 1; i <= nonce; ) {
@@ -207,7 +216,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         virtual
         returns (string[] memory)
     {
-        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+        if(account == address(0)) revert AddressZero();
+
         (uint256[] memory ownedTokens) = tokensFrom(account);
         uint256 _nTokens = ownedTokens.length;
         string[] memory tokenURIS = new string[](_nTokens);
@@ -238,7 +248,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         virtual
         returns (string[] memory)
     {
-        require(account != address(0), "SBTERC1155: address zero is not a valid owner");
+        if(account == address(0)) revert AddressZero();
+
         (uint256[] memory pendingTokens) = pendingFrom(account);
         uint256 _nTokens = pendingTokens.length;
         string[] memory tokenURIS = new string[](_nTokens);
@@ -291,7 +302,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         uint256 amount,
         bytes memory data
     ) public virtual override {
-        require(from == tokens[id].creator, "SBTERC1155: caller is not creator");
+        if(from != tokens[id].creator) revert NotOwner(from,id);
+
         _safeTransferFrom(from, to, id, amount, data);
     }
 
@@ -307,7 +319,13 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         address[] memory to,
         uint256 id
     ) external virtual override {
-        require(from == tokens[id].creator, "SBTERC1155: caller is not creator");
+        if(from != tokens[id].creator) revert NotOwner(from,id);
+        for (uint256 i = 0; i < _totalDestinataries; ) {
+            address _dest = to[i];
+
+            if(_dest == address(0)) revert AddressZero();
+            if(_balances[_dest][id] == true || pending[_dest][id] == true) revert AlreadyOwnedOrPending(id);
+        }
         _safeMultiTransfer(from, to, id);
     }
 
@@ -333,10 +351,9 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         uint256 amount,
         bytes memory data
     ) internal virtual {
-        require(to != address(0), "SBTERC1155: transfer to the zero address");
-        require(amount == 1, "SBTERC1155: can only transfer one token");
-        require(_balances[to][id] == false, "SBTERC1155: Already owned");
-        require(pending[to][id] == false, "SBTERC1155: Already pending");
+        if(to == address(0)) revert AddressZero();
+        if(_balances[to][id] == true || pending[to][id] == true) revert AlreadyOwnedOrPending(id);
+        if(amount != 1) revert("Can only transfer one token");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
@@ -368,14 +385,6 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
         uint256[] memory amounts = _asSingletonArray(1);
-        
-
-        for (uint256 i = 0; i < _totalDestinataries; ) {
-            address _dest = to[i];
-            require(_dest != address(0), "SBTERC1155: transfer to the zero address");
-            require(_balances[_dest][id] == false, "SBTERC1155: Already owned");
-            require(pending[_dest][id] == false, "SBTERC1155: Already pending");
-        }
 
         for (uint256 i = 0; i < _totalDestinataries; ) {
             address _dest = to[i];
@@ -399,7 +408,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * If action == 1-Claim pending token
      * If action == 0-Reject pending token
      */
-    function claimOrReject(uint256 _id,bool _action) external virtual override {
+    function claimOrReject(uint256 _id, bool _action) external virtual override {
         address _account = _msgSender();
         _claimOrReject(_account, _action, _id);
     }
@@ -416,8 +425,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      *
      */
     function _claimOrReject(address account, bool action, uint256 id) internal virtual {
-        require(_balances[account][id] == false, "SBTERC1155: caller already owns id");
-        require(pending[account][id] == true, "SBTERC1155: caller has not pending under id");
+        if(_balances[account][id] == true) revert AlreadyOwnedOrPending(id);
+        if(pending[account][id] == false) revert("Id not pending");
 
         address _newOwner;
         if(action){
@@ -445,7 +454,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - `account` must have `_id` token.
      */
     function _burn(address _account, uint256 id) internal virtual {
-        require(_balances[_account][id] == true, "SBTERC1155: caller is not owner");
+        if(_balances[_account][id] == false) revert("Caller is not owner");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
