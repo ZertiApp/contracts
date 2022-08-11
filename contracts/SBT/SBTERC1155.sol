@@ -26,6 +26,12 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
     string private _uri;
 
+    // Used as Name for the collection
+    string public name;
+
+    // Used as Symbol for the collection
+    string public symbol;
+
     // Mapping to token id to Token struct[creator, data(IPF-Hash)]
     mapping(uint256 => Token) internal tokens; // id to Token
 
@@ -34,6 +40,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
     // Mapping from address to mapping id bool that states if address has tokens(under id) awaiting to be claimed
     mapping(address => mapping(uint256 => bool)) internal pending;
+
 
     error NotOwner(address addr, uint256 id);
 
@@ -56,8 +63,10 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     /**
      * @dev Sets base uri for tokens. Preferably "https://ipfs.io/ipfs/"
      */
-    constructor(string memory uri_) {
+    constructor(string memory uri_, string memory name_, string memory symbol_) {
         _uri = uri_;
+        name = name_;
+        symbol = symbol_;
     }
 
     /**
