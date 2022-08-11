@@ -32,7 +32,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     // Used as Symbol for the collection
     string public symbol;
 
-    // Mapping to token id to Token struct[creator, data(IPF-Hash)]
+    // Mapping to token id to Token struct[creator, data (IPFS-Hash) ]
     mapping(uint256 => Token) internal tokens; // id to Token
 
     // Mapping from token ID to account balances
@@ -41,14 +41,17 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     // Mapping from address to mapping id bool that states if address has tokens(under id) awaiting to be claimed
     mapping(address => mapping(uint256 => bool)) internal pending;
 
+    // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
+    error NotOwner(address account, uint256 id);
 
-    error NotOwner(address addr, uint256 id);
-
+    // Error - Address zero is passed as a function parameter
     error AddressZero();
 
-    error AlreadyPending(uint256 id);
+    // Error - `account` already owns `id` or has `id` under pending
+    error AlreadyAsignee(address account, uint256 id);
 
-    error NotPending(uint256 id);
+    // Error - Used for deprecated IERC1155 functions.
+    error Unsupported(bytes params);
 
     /**
      * @dev Main token struct.
@@ -340,8 +343,9 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
             address _dest = to[i];
 
             if(_dest == address(0)) revert AddressZero();
-            if(pending[_dest][id] == true) revert AlreadyPending(id);
+            if(pending[_dest][id] == true || _balances[_dest][id] == true ) revert AlreadyAsignee(_dest, id);
         }
+
         _safeMultiTransfer(from, to, id);
     }
 
@@ -369,7 +373,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     ) internal virtual {
         if(from != tokens[id].creator) revert NotOwner(from,id);
         if(to == address(0)) revert AddressZero();
-        if(pending[to][id] == true) revert AlreadyPending(id);
+        if(pending[to][id] == true || _balances[to][id] == true ) revert AlreadyAsignee(to, id);
         if(amount != 1) revert("Can only transfer one token");
 
         address operator = _msgSender();
@@ -448,7 +452,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      *
      */
     function _claimOrReject(address account, bool action, uint256 id) internal virtual {
-        if(pending[account][id] == false) revert("Not claimable");
+        if(pending[account][id] == false || _balances[account][id] == true) revert("Not claimable");
 
         address _newOwner;
         if(action){
@@ -476,7 +480,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - `account` must have `_id` token.
      */
     function _burn(address _account, uint256 id) internal virtual {
-        if(_balances[_account][id] == false) revert("Caller is not owner");
+        if(_balances[_account][id] == false) revert NotOwner(_account, id);
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
@@ -618,17 +622,17 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * @dev Disabled function
      * @dev See {IERC1155-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved) public virtual override {revert();}
+    function setApprovalForAll(address operator, bool approved) public virtual override { revert Unsupported(abi.encodePacked(operator,approved)); }
 
     /**
      * @dev Disabled function
      * @dev See {IERC1155-isApprovedForAll}.
      */
-    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {revert();}
+    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) { revert Unsupported(abi.encodePacked(account, operator)); }
 
     /**
      * @dev Disabled function
      * @dev See {IERC1155-safeBatchTransferFrom}.
      */
-    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) external override {revert();}
+    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) external pure override { revert Unsupported(abi.encodePacked(from, to, ids, amounts, data)); }
 }
