@@ -25,7 +25,7 @@ interface ISBTERC1155 {
     /**
      * @dev Get tokens marked as pending of a given address
      */
-    function pendingFrom(address from) external view returns (string[] memory);
+    function pendingFrom(address from) external view returns (uint256[] memory);
     
     /**
      * @dev Claims or Reject pending `_id` from address `_account`.

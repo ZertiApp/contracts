@@ -12,10 +12,14 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "./ISBTERC1155.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+
 
 contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC1155{
+    using Address for address;
 
     uint256 private nonce;
 
@@ -173,7 +177,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      *
      */
     function pendingFrom(address account)
-        external
+        public
         view
         virtual
         override
@@ -320,6 +324,9 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         uint256 id
     ) external virtual override {
         if(from != tokens[id].creator) revert NotOwner(from,id);
+
+        uint256 _totalDestinataries = to.length;
+
         for (uint256 i = 0; i < _totalDestinataries; ) {
             address _dest = to[i];
 
@@ -366,6 +373,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         emit TransferSingle(operator, from, to, nonce, amount);
         _afterTokenTransfer(operator, from, to, ids, amounts, data);
 
+        _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
+
     }
 
     /**
@@ -394,6 +403,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
             pending[_dest][id] = true;
 
             _afterTokenTransfer(operator, from, _dest, ids, amounts, "");
+
+            _doSafeTransferAcceptanceCheck(operator, from, _dest, id, 1, "");
 
             unchecked {
                 ++i;
@@ -566,6 +577,30 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         array[0] = element;
 
         return array;
+    }
+
+    /**
+     * @dev see {ERC1155-_doSafeTransferAcceptanceCheck, IERC1155Receivable}
+     */
+    function _doSafeTransferAcceptanceCheck(
+        address operator,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) private {
+        if (to.isContract()) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155Receiver.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+            }
+        }
     }
 
     /**
