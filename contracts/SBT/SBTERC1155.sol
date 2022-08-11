@@ -39,7 +39,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
     error AddressZero();
 
-    error AlreadyOwnedOrPending(uint256 id);
+    error AlreadyPending(uint256 id);
 
     error NotPending(uint256 id);
 
@@ -331,7 +331,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
             address _dest = to[i];
 
             if(_dest == address(0)) revert AddressZero();
-            if(_balances[_dest][id] == true || pending[_dest][id] == true) revert AlreadyOwnedOrPending(id);
+            if(pending[_dest][id] == true) revert AlreadyPending(id);
         }
         _safeMultiTransfer(from, to, id);
     }
@@ -359,7 +359,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         bytes memory data
     ) internal virtual {
         if(to == address(0)) revert AddressZero();
-        if(_balances[to][id] == true || pending[to][id] == true) revert AlreadyOwnedOrPending(id);
+        if(pending[to][id] == true) revert AlreadyPending(id);
         if(amount != 1) revert("Can only transfer one token");
 
         address operator = _msgSender();
@@ -436,8 +436,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      *
      */
     function _claimOrReject(address account, bool action, uint256 id) internal virtual {
-        if(_balances[account][id] == true) revert AlreadyOwnedOrPending(id);
-        if(pending[account][id] == false) revert("Id not pending");
+        if(pending[account][id] == false) revert("Not claimable");
 
         address _newOwner;
         if(action){
@@ -619,5 +618,5 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * @dev Disabled function
      * @dev See {IERC1155-safeBatchTransferFrom}.
      */
-    function safeBatchTransferFrom(address from,address to,uint256[] memory ids, uint256[] memory amounts, bytes memory data) external override {revert();}
+    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) external override {revert();}
 }
