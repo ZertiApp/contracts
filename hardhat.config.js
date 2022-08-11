@@ -38,12 +38,6 @@ module.exports = {
       },
     ],
   },
-  networks: {
-    mumbai: {
-      url: "https://rpc-mumbai.maticvigil.com",
-      accounts: [ENV["TEST_ACCOUNT_PK"]],
-    },
-  },
   gasReporter: {
     enabled: true,
     currency: "USD",
