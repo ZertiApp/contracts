@@ -419,9 +419,9 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * If action == 1-Claim pending token
      * If action == 0-Reject pending token
      */
-    function claimOrReject(uint256 _id, bool _action) external virtual override {
-        address _account = _msgSender();
-        _claimOrReject(_account, _action, _id);
+    function claimOrReject(uint256 id, bool _action) external virtual override {
+        address operator = _msgSender();
+        _claimOrReject(operator, _action, id);
     }
 
     /**
