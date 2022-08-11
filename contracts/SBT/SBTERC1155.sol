@@ -367,6 +367,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         uint256 amount,
         bytes memory data
     ) internal virtual {
+        if(from != tokens[id].creator) revert NotOwner(from,id);
         if(to == address(0)) revert AddressZero();
         if(pending[to][id] == true) revert AlreadyPending(id);
         if(amount != 1) revert("Can only transfer one token");
@@ -398,6 +399,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         address[] memory to,
         uint256 id
     ) internal virtual {
+        if(from != tokens[id].creator) revert NotOwner(from,id);
+        
         uint256 _totalDestinataries = to.length;
 
         address operator = _msgSender();
