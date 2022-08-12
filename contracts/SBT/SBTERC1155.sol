@@ -21,6 +21,7 @@ import "./ISBTERC1155.sol";
 contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC1155{
     using Address for address;
 
+    // Used for making each token unique, Mantains ID registry and quantity of tokens minted.
     uint256 private nonce;
 
     // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
@@ -455,20 +456,21 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         if(pending[account][id] == false || _balances[account][id] == true) revert("Not claimable");
 
         address _newOwner;
+
         if(action){
             _newOwner = account;
         } else {
             _newOwner = address(0);
         }
 
-        _beforeTokenClaim(_newOwner, id);
+        _beforeTokenClaim(account, _newOwner, id);
 
         _balances[account][id] = action;
         pending[account][id] = false;
 
-        emit TokenClaimed(_newOwner, id);
+        emit TokenClaimed(account, _newOwner, id);
 
-        _afterTokenClaim(_newOwner, id);
+        _afterTokenClaim(account, _newOwner, id);
     }
 
     /**
@@ -562,10 +564,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - When `newOwner` is non-zero, a token typen under `id` will now be claimed and owned by`to`.
      * - When `newOwner` is zero, a token typen under `id` will now be rejected.
      * 
-     * @param newOwner the address who will claim or reject the token
-     * @param id the token id
      */
-    function _beforeTokenClaim(address newOwner, uint256 id)
+    function _beforeTokenClaim(address operator, address newOwner, uint256 id)
         internal
         virtual
     {}
@@ -579,10 +579,8 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - When `newOwner` is non-zero, a token under `id` will now be claimed and owned by`to`.
      * - When `newOwner` is zero, a token under `id` will now be rejected.
      * 
-     * @param newOwner the address who will claim or reject the token
-     * @param id the token id
      */
-    function _afterTokenClaim(address newOwner, uint256 id)
+    function _afterTokenClaim(address operator, address newOwner, uint256 id)
         internal
         virtual
     {}

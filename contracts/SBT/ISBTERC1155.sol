@@ -3,14 +3,14 @@
 pragma solidity ^0.8.4;
 
 /**
- * @dev Interface of the MSSBT
+ * @dev Interface of the SBTERC1155 Contract
  */
 interface ISBTERC1155 {
 
     /**
      * @dev Emitted when `newOwner` claims or rejects pending `id`.
      */
-    event TokenClaimed(address indexed newOwner, uint256 id);
+    event TokenClaimed(address indexed operator, address indexed newOwner, uint256 id);
 
     /**
      * @dev Emitted when `from` transfers token under `id` to every address at `to[]`.
