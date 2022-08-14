@@ -80,7 +80,9 @@ contract Badge is SBTERC1155 {
         string[] memory _mintedTokensURI = new string[] (_nMintedTokens);
 
         for(uint256 i = 0; i < _nMintedTokens;){
-            _mintedTokensURI[i] = tokens[_mintedTokens[i]].data;
+            _mintedTokensURI[i] = string(
+                abi.encodePacked(_uri, tokens[_mintedTokens[i]].data)
+            );
             unchecked {
                 ++i;
             }

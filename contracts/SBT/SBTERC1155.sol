@@ -25,7 +25,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     uint256 internal nonce;
 
     // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
-    string private _uri;
+    string internal _uri;
 
     // Mapping to token id to Token struct[creator, data (IPFS-Hash) ]
     mapping(uint256 => Token) internal tokens; // id to Token
