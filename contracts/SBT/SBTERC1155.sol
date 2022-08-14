@@ -377,7 +377,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
         pending[to][id] = true;
 
-        emit TransferSingle(operator, from, to, nonce, amount);
+        emit TransferSingle(operator, from, to, id, amount);
         _afterTokenTransfer(operator, from, to, ids, amounts, data);
 
         _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
