@@ -10,7 +10,7 @@ pragma solidity ^0.8.4;
 
 import "./SBTERC1155.sol";
 
-contract Zert is SBTERC1155 {
+contract Badge is SBTERC1155 {
 
     // Used as Name for the collection
     string public name;

@@ -466,22 +466,6 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     }
 
     /**
-     * @dev claims or Reject a batch of tokens
-     * See claimOrReject() for more info
-     */
-    function claimOrRejectBatch(uint256 ids[], bool _action) external virtual override {
-        address operator = _msgSender();
-        for(int i = 0; i<id.length){
-            _claimOrReject(operator, _action, ids[i]);
-
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-
-    /**
      * @dev Destroys `_id` token from `_account`
      *
      * Emits a {Transfer} event with `to` set to the zero address.
