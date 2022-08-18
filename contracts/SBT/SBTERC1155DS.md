@@ -13,14 +13,7 @@ requires (*optional): 165, 1155
 
 ## Abstract
 
-Sbt
-compatible erc1155
-double sig
-burnable
-
-This is standard interface for non fungible, non transferible, double sig token. Was inspired by the ERC1155 and SBT proposed by Vitalik.
-
-Abstract is a multi-sentence (short paragraph) technical summary. This should be a very terse and human-readable version of the specification section. Someone should be able to read only the abstract to get the gist of what this specification does.
+This is a standard interface for non fungible, non transferible, double signature, multi-token standard. It was inspired by the main characteristics of the EIP-1155 token and by the [paper](https://vitalik.ca/general/2022/01/26/soulbound.html) published by Vitalik Butherin that presented benefits and potential use-cases of SoulBoundTokens(SBT).
 
 ## Motivation
 
@@ -36,11 +29,13 @@ We consider this is necessary because of these characteristcs could have lots of
 There is not any EIP with this characteristcs, although there are some proposal with SBT but not like this one.
 
 ### Characteristcs
-* The NFT will be intransferible after the initial transfer.
-* Is compatible with ERC1155
-* Double sig
+* The NFT will be intransferible after the initial transfer(SoulBoundToken-SBT).
+* Is compatible with EIP-1155.
+* Double Signature.
+* Multi-Token and Semi-Fungible standard.
 
 ### Applications
+* Academy
 * Certifications
 * POAP
 
@@ -52,7 +47,10 @@ The motivation section should describe the "why" of this EIP. What problem does 
 ## Specification
 The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in RFC 2119.
 
-poner codigo de interfaz
+Smart contracts implementing the SBTERC1155DS standard MUST implement all of the functions in the SBTERC1155DS interface.
+
+Smart contracts implementing the SBTERC1155DS standard MUST implement the ERC-165 supportsInterface function and MUST return the constant value true if 0xd9b67a26 is passed through the interfaceID argument.
+
 ```solidity
 // SPDX-License-Identifier: MIT
 
