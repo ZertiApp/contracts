@@ -11,14 +11,14 @@ created: <date created on, in ISO 8601 (yyyy-mm-dd) format>
 requires (*optional): 165, 1155
 ---
 
-## Summary
-
 ## Abstract
 
 Sbt
 compatible erc1155
 double sig
 burnable
+
+This is standard interface for non fungible, non transferible, double sig token. Was inspired by the ERC1155 and SBT proposed by Vitalik.
 
 Abstract is a multi-sentence (short paragraph) technical summary. This should be a very terse and human-readable version of the specification section. Someone should be able to read only the abstract to get the gist of what this specification does.
 
@@ -30,6 +30,19 @@ expanded by erc1155
 esta sbt 721
 
 porque es necesario
+
+We consider this is necessary because of these characteristcs could have lots of application, like Vitalik said on his [paper](https://vitalik.ca/general/2022/01/26/soulbound.html). 
+
+There is not any EIP with this characteristcs, although there are some proposal with SBT but not like this one.
+
+### Characteristcs
+* The NFT will be intransferible after the initial transfer.
+* Is compatible with ERC1155
+* Double sig
+
+### Applications
+* Certifications
+* POAP
 
 
 The motivation section should describe the "why" of this EIP. What problem does it solve? Why should someone want to implement this standard? What benefit does it provide to the Ethereum ecosystem? What use cases does this EIP address?
@@ -105,10 +118,13 @@ The technical specification should describe the syntax and semantics of any new 
 
 ## Rationale
 porque el diseño
+
+We implement the double sig function to prevent the spam or unwanted tokens. We thought the user has to claimed the token they want or reject it in the other case.
+
 The rationale fleshes out the specification by describing what motivated the design and why particular design decisions were made. It should describe alternate designs that were considered and related work, e.g. how the feature is supported in other languages.
 
 ## Backwards Compatibility
-This proposal is fully backward compatible with EIP-1155.
+This proposal is fully backward compatible with ERC1155.
 
 ## Test Cases
 test.js
