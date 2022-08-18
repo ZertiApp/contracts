@@ -49,7 +49,8 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 
 Smart contracts implementing the SBTERC1155DS standard MUST implement all of the functions in the SBTERC1155DS interface.
 
-Smart contracts implementing the SBTERC1155DS standard MUST implement the ERC-165 supportsInterface function and MUST return the constant value true if 0xd9b67a26 is passed through the interfaceID argument.
+Smart contracts implementing the SBTERC1155DS standard MUST implement the ERC-165 supportsInterface function and MUST return the constant value true if 0xd9b67a26 is passed through the interfaceID argument. They also MUST implement the ERC1155 Metadata interface, and MUST return the constant value true if 0x0e89341c is passed through the interfaceID argument.
+
 
 ```solidity
 // SPDX-License-Identifier: MIT
