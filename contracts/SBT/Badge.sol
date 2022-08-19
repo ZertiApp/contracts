@@ -8,9 +8,9 @@
 
 pragma solidity ^0.8.4;
 
-import "./SBTERC1155.sol";
+import "./SBTERC1155DS.sol";
 
-contract Badge is SBTERC1155 {
+contract Badge is SBTERC1155DS {
 
     // Used as Name for the collection
     string public name;
@@ -21,7 +21,7 @@ contract Badge is SBTERC1155 {
     // Used as Contract Metadata URI
     string public _contractUri;
 
-    constructor(string memory _uri, string memory _name, string memory _symbol, string memory contractUri_) SBTERC1155(_uri) {
+    constructor(string memory _uri, string memory _name, string memory _symbol, string memory contractUri_) SBTERC1155DS(_uri) {
         name = _name;
         symbol = _symbol;
         _contractUri = contractUri_;

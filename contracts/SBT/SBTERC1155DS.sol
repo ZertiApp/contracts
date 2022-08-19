@@ -15,10 +15,10 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./ISBTERC1155.sol";
+import "./ISBTERC1155DS.sol";
 
 
-contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC1155{
+contract SBTERC1155DS is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC1155DS {
     using Address for address;
 
     // Used for making each token unique, Mantains ID registry and quantity of tokens minted.
@@ -35,15 +35,6 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
 
     // Mapping from address to mapping id bool that states if address has tokens(under id) awaiting to be claimed
     mapping(address => mapping(uint256 => bool)) private pending;
-
-    // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
-    error NotOwner(address account, uint256 id);
-
-    // Error - Address zero is passed as a function parameter
-    error AddressZero();
-
-    // Error - `account` already owns `id` or has `id` under pending
-    error AlreadyAsignee(address account, uint256 id);
 
     // Error - Used for deprecated IERC1155 functions.
     error Unsupported(bytes params);
@@ -72,7 +63,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         return
             interfaceId == type(IERC1155).interfaceId ||
             interfaceId == type(IERC1155MetadataURI).interfaceId ||
-            interfaceId == type(ISBTERC1155).interfaceId ||
+            interfaceId == type(ISBTERC1155DS).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -311,7 +302,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         uint256 amount,
         bytes memory data
     ) public virtual override {
-        if(from != tokens[id].creator) revert NotOwner(from,id);
+        if(from != tokens[id].creator) revert NotOwner(from, id);
 
         _safeTransferFrom(from, to, id, amount, data);
     }
@@ -323,23 +314,15 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - 'from' must be the creator(minter) of `id`.
      *
      */
-    function multiTransfer (
+    function batchTransfer (
         address from,
         address[] memory to,
-        uint256 id
+        uint256 id,
+        bytes memory data
     ) external virtual override {
-        if(from != tokens[id].creator) revert NotOwner(from,id);
+        if(from != tokens[id].creator) revert NotOwner(from, id);
 
-        uint256 _totalDestinataries = to.length;
-
-        for (uint256 i = 0; i < _totalDestinataries; ) {
-            address _dest = to[i];
-
-            if(_dest == address(0)) revert AddressZero();
-            if(pending[_dest][id] == true || _balances[_dest][id] == true ) revert AlreadyAsignee(_dest, id);
-        }
-
-        _multiTransfer(from, to, id);
+        _batchTransfer(from, to, id, data);
     }
 
     /**
@@ -364,12 +347,13 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         uint256 amount,
         bytes memory data
     ) internal virtual {
-        if(from != tokens[id].creator) revert NotOwner(from,id);
+        if(from != tokens[id].creator) revert NotOwner(from, id);
         if(to == address(0)) revert AddressZero();
         if(pending[to][id] == true || _balances[to][id] == true ) revert AlreadyAsignee(to, id);
         if(amount != 1) revert("Can only transfer one token");
 
         address operator = _msgSender();
+
         uint256[] memory ids = _asSingletonArray(id);
         uint256[] memory amounts = _asSingletonArray(amount);
 
@@ -391,34 +375,36 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - See {ISBTERC1155-safeMultiTransfer}.
      *
      */
-    function _multiTransfer(
+    function _batchTransfer(
         address from,
         address[] memory to,
-        uint256 id
+        uint256 id,
+        bytes memory data
     ) internal virtual {
-        if(from != tokens[id].creator) revert NotOwner(from,id);
+        if(from != tokens[id].creator) revert NotOwner(from, id);
         
-        uint256 _totalDestinataries = to.length;
-
         address operator = _msgSender();
-        uint256[] memory ids = _asSingletonArray(id);
-        uint256[] memory amounts = _asSingletonArray(1);
 
-        for (uint256 i = 0; i < _totalDestinataries; ) {
+        _beforeBatchedTokenTransfer(operator, from, to, id, data);
+
+        for (uint256 i = 0; i < to.length; ) {
             address _dest = to[i];
 
-            _beforeTokenTransfer(operator, from, _dest, ids, amounts, "");
+            if(_dest == address(0)) revert AddressZero();
+            if(pending[_dest][id] == true) revert AlreadyAsignee(_dest, id);
+            if(_balances[_dest][id] == true ) revert AlreadyAsignee(_dest, id);
 
             pending[_dest][id] = true;
-
-            _afterTokenTransfer(operator, from, _dest, ids, amounts, "");
 
             unchecked {
                 ++i;
             }
+
         }
 
         emit TransferMulti(from, to, id);
+
+        _beforeBatchedTokenTransfer(operator, from, to, id, data);
     }
 
     /**
@@ -542,6 +528,62 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual {}
+
+    /**
+     * @dev Hook that is called before any batched token transfer. This includes minting
+     * and burning, as well as batched variants.
+     *
+     * The same hook is called on both single and batched variants. For single
+     * transfers, the length of the `id` and `amount` arrays will be 1.
+     *
+     * Calling conditions (for each `id` and `amount` pair):
+     *
+     * - `amount` will always be and must be equal to 1.
+     * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * of token type `id` will be  transferred to `to`.
+     * - When `from` is zero, `amount` tokens of token type `id` will be minted
+     * for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * will be burned.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _beforeBatchedTokenTransfer(
+        address operator,
+        address from,
+        address[] memory to,
+        uint256 id,
+        bytes memory data
+    ) internal virtual {}
+
+    /**
+     * @dev Hook that is called after any batched token transfer. This includes minting
+     * and burning, as well as batched variants.
+     *
+     * The same hook is called on both single and batched variants. For single
+     * transfers, the length of the `id` and `amount` arrays will be 1.
+     *
+     * Calling conditions (for each `id` and `amount` pair):
+     *
+     * - `amount` will always be and must be equal to 1.
+     * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * of token type `id` will be  transferred to `to`.
+     * - When `from` is zero, `amount` tokens of token type `id` will be minted
+     * for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * will be burned.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _afterBatchedTokenTransfer(
+        address operator,
+        address from,
+        address[] memory to,
+        uint256 id,
         bytes memory data
     ) internal virtual {}
 

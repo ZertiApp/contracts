@@ -3,9 +3,20 @@
 pragma solidity ^0.8.4;
 
 /**
- * @dev Interface of the SBTERC1155 Contract
+    @title Soulbound, Multi-Token, Semi-fungible, Double-Signature Standard.
+    Note: The ERC-165 identifier for this interface is 0xb86868e0.
  */
-interface ISBTERC1155 {
+
+interface ISBTERC1155DS {
+
+    // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
+    error NotOwner(address account, uint256 id);
+
+    // Error - Address zero is passed as a function parameter
+    error AddressZero();
+
+    // Error - `account` already owns `id` or has `id` under pending
+    error AlreadyAsignee(address account, uint256 id);
 
     /**
      * @dev Emitted when `newOwner` claims or rejects pending `id`.
@@ -53,6 +64,6 @@ interface ISBTERC1155 {
      * Emits a {TransfersMulti} event.
      *
      */
-    function multiTransfer (address from, address[] memory to, uint256 id) external;
+    function batchTransfer (address from, address[] memory to, uint256 id, bytes memory data) external;
 
 }
