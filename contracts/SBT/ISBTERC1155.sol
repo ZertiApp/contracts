@@ -53,6 +53,6 @@ interface ISBTERC1155 {
      * Emits a {TransfersMulti} event.
      *
      */
-    function safeMultiTransfer (address from, address[] memory to, uint256 id) external;
+    function multiTransfer (address from, address[] memory to, uint256 id) external;
 
 }

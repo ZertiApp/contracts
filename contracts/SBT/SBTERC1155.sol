@@ -22,19 +22,19 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
     using Address for address;
 
     // Used for making each token unique, Mantains ID registry and quantity of tokens minted.
-    uint256 internal nonce;
+    uint256 private nonce;
 
     // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
-    string internal _uri;
+    string private _uri;
 
     // Mapping to token id to Token struct[creator, data (IPFS-Hash) ]
-    mapping(uint256 => Token) internal tokens; // id to Token
+    mapping(uint256 => Token) private tokens; // id to Token
 
     // Mapping from token ID to account balances
-    mapping(address => mapping(uint256 => bool)) internal _balances; 
+    mapping(address => mapping(uint256 => bool)) private _balances; 
 
     // Mapping from address to mapping id bool that states if address has tokens(under id) awaiting to be claimed
-    mapping(address => mapping(uint256 => bool)) internal pending;
+    mapping(address => mapping(uint256 => bool)) private pending;
 
     // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
     error NotOwner(address account, uint256 id);
@@ -323,7 +323,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - 'from' must be the creator(minter) of `id`.
      *
      */
-    function safeMultiTransfer (
+    function multiTransfer (
         address from,
         address[] memory to,
         uint256 id
@@ -339,7 +339,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
             if(pending[_dest][id] == true || _balances[_dest][id] == true ) revert AlreadyAsignee(_dest, id);
         }
 
-        _safeMultiTransfer(from, to, id);
+        _multiTransfer(from, to, id);
     }
 
     /**
@@ -391,7 +391,7 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
      * - See {ISBTERC1155-safeMultiTransfer}.
      *
      */
-    function _safeMultiTransfer(
+    function _multiTransfer(
         address from,
         address[] memory to,
         uint256 id
@@ -412,8 +412,6 @@ contract SBTERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI, ISBTERC11
             pending[_dest][id] = true;
 
             _afterTokenTransfer(operator, from, _dest, ids, amounts, "");
-
-            _doSafeTransferAcceptanceCheck(operator, from, _dest, id, 1, "");
 
             unchecked {
                 ++i;
