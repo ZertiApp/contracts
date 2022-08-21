@@ -133,7 +133,7 @@ As the problem this standard aims to solve is academic certification, this chara
 After testing the standard, we found out that using custom errors was way more gas efficient than using require()
  statements.
 ### Metadata.
-The EIP1155 Metadata Interface was implemented for more compatibility with EIP-1155. Despite this, our standard only stores the base URI (**For example**, "https://ipfs.io/ipfs/") and saves the IPFS Hash for each id (**Example:** "QmeHSRgayHELM7gJSFzc3cFRU9Vx1KYQdK2BHy5vpTF7uT"). When `uri(...)` function is called, these two strings are concatenated to generate a unique metadata under each token id, allowing for a multi token standard.
+The EIP1155 Metadata Interface was implemented for more compatibility with EIP-1155.
 
 ### Multi token
 The multi token functionality was used in order for easier organization, all emitted tokens are stored in the same contract, preventing redundant bytecode from being deployed to the blockchain. It also facilitates transfer to token issuers, given that all issued tokens are stored and can be accessed under the same address.
