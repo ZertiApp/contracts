@@ -410,7 +410,7 @@ contract SBTERC1155DS is
     ) internal virtual {
         if (to == address(0)) revert AddressZero();
         if (_pendings[to][id] == true || _balances[to][id] == true)
-            revert AlreadyAsignee(to, id);
+            revert AlreadyAssignee(to, id);
 
         address operator = _msgSender();
 
@@ -450,8 +450,8 @@ contract SBTERC1155DS is
             address _to = to[i];
 
             if (_to == address(0)) revert AddressZero();
-            if (_pendings[_to][id] == true) revert AlreadyAsignee(_to, id);
-            if (_balances[_to][id] == true) revert AlreadyAsignee(_to, id);
+            if (_pendings[_to][id] == true) revert AlreadyAssignee(_to, id);
+            if (_balances[_to][id] == true) revert AlreadyAssignee(_to, id);
 
             _pendings[_to][id] = true;
 
