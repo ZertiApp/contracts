@@ -2,7 +2,7 @@
 eip: <to be assigned>
 title: Soulbound, Multi Token Standard.
 description: An interface for non-transferrable NFTs binding to an Ethereum account for standardized blockchain-based academic certification.
-author: Matias Arazi <matiasarazi@gmail.com>, Lucas Martín Grasso Ramos<lucasgrassoramos@gmail.com>
+author: Lucas Martín Grasso Ramos(@LucasGrasso), Matias Arazi(@MatiArazi)
 discussions-to: <URL>
 status: Draft
 type: Standards Track
@@ -41,9 +41,6 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 **Smart contracts implementing the SBTERC1155DS standard MUST implement the ERC-165 supportsInterface function and and MUST return the constant value true if 0x812b9fae is passed through the interfaceID argument.They also MUST implement the EIP-1155 Interface and MUST return the constant value true if 0xd9b67a26 is passed through the interfaceID argument. Furthermore, they MUST implement the EIP-1155 Metadata interface, and MUST return the constant value true if 0x0e89341c is passed through the interfaceID argument.**
 
 See [EIP-1155 Specification](https://eips.ethereum.org/EIPS/eip-1155#specification)
-
-**The approval methods were overridden and emptied for allowing only token receivers to have full control over their tokens.**
-
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -128,15 +125,15 @@ We believe that Soulbound Token serves as a specialized subset of the existing E
 ### Double-Signature
 The Double-Signature functionality was implemented to prevent the receival of unwanted tokens. As this standard is aimed to academic certification, this functionality mimics the real world: You have to accept a degree for it to be yours, for example.
 
-### Only transferable by token creator/minter
+### Only transferable by token creator/minter (Reference Implementation)
 As the problem this standard aims to solve is academic certification, this characteristic also tends to mimic real world functionality. Only the creator/minter of the token under `id` will be able to transfer the token to new people (Semi-Fungible token). This allows for issuer traceability and connections with a DAO Voting System, for example, in order to only allow emission to voted and trusted addresses. Regardless of this, users have full power over their tokens: They can claim/reject them, and burn them afterwards. Token creators/minters have no control over a token after minting.
 
 ### Metadata & Multi-token.
 The EIP1155 Metadata Interface was implemented for more compatibility with EIP-1155. Despite this, our standard only stores the base URI (For example, "https://ipfs.io/ipfs/") and saves the IPFS Hash for each id (Example: "QmeHSRgayHELM7gJSFzc3cFRU9Vx1KYQdK2BHy5vpTF7uT"). When `uri(...)` function is called, these two strings are concatenated to generate a unique metadata under each token id, allowing for a multi token standard. The multi token functionality was used in order for easier organization, all emitted tokens are stored in the same contract, preventing redundant bytecode from being deployed to the blockchain. It also facilitates transfer to token issuers.
 
-See [EIP-1155 Metadata](https://eips.ethereum.org/EIPS/eip-1155#metadata)
+See [EIP-1155](https://eips.ethereum.org/EIPS/eip-1155)
 
-### batchTransfer function
+### batchTransfer() function
 The token standard supports a batch transfer function to multiple addresses, and this was made to ease the transfer to multiple people, making it more gas-efficient and easier for the users.
 
 ## Backwards Compatibility
