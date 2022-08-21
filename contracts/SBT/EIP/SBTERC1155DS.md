@@ -134,11 +134,10 @@ After testing the standard, we found out that using custom errors was way more g
  statements.
 ### Metadata.
 The EIP1155 Metadata Interface was implemented for more compatibility with EIP-1155.
+See [EIP-1155 Metadata](https://eips.ethereum.org/EIPS/eip-1155#metadata)
 
 ### Multi token
 The multi token functionality was used in order for easier organization, all emitted tokens are stored in the same contract, preventing redundant bytecode from being deployed to the blockchain. It also facilitates transfer to token issuers, given that all issued tokens are stored and can be accessed under the same address.
-
-See [EIP-1155](https://eips.ethereum.org/EIPS/eip-1155)
 
 ### batchTransfer() function
 The token standard supports a batch transfer function to multiple addresses, and this was made to ease the transfer to multiple people, making it more gas-efficient and easier for the users.
@@ -158,6 +157,7 @@ There are no security considerations related directly to the implementation of t
 * [RFC 2119 Key words for use in RFCs to Indicate Requirement Levels](https://www.ietf.org/rfc/rfc2119.txt)
 
 **Implementations**
+- [SBTERC1155DS Reference Implementation](https://ipfs.io/ipfs/QmWyU2KxpNzWCm5tPWgm517KFvaTtY1aehNDM1fJXL3eEd?filename=SBTERC1155DS.sol)
 * [Zerti](https://dev.zerti.com.ar/feed) (Link to Rinkeby testnet test application)
 
 **Articles & Discussions**
