@@ -55,13 +55,13 @@ pragma solidity ^0.8.4;
 interface ISBTERC1155DS {
 
     // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
-    error NotOwner(address account, uint256 id);
+    error Unauthorized(address account, uint256 id);
 
     // Error - Address zero is passed as a function parameter
     error AddressZero();
 
     // Error - `account` already owns `id` or has `id` under pending
-    error AlreadyAsignee(address account, uint256 id);
+    error AlreadyAssignee(address account, uint256 id);
 
     /**
      * @dev Emitted when `newOwner` claims or rejects pending `id`.
@@ -88,8 +88,8 @@ interface ISBTERC1155DS {
      *
      * Requirements:
      * - `account` cannot be the zero address.
-     * - `account` must have a pending token under `id` at the moment of call.
-     * - `account` mUST not own a token under `id` at the moment of call.
+     * - `account` MUST have a pending token under `id` at the moment of call.
+     * - `account` MUST not own a token under `id` at the moment of call.
      *
      * Emits a {TokenClaimed} event.
      *
@@ -101,10 +101,10 @@ interface ISBTERC1155DS {
      *
      * Requirements:
      *
-     * - `_from` must be the creator(minter) of `id`.
-     * - All addresses in `to[]` must be non-zero.
-     * - All addresses in `to[]` must have the token `id` marked as pending.
-     * - All addresses in `to[]` must must not own a token type under `id`.
+     * - `_from` MUST be the creator(minter) of `id`.
+     * - All addresses in `to[]` MUST be non-zero.
+     * - All addresses in `to[]` MUST have the token `id` under `_pendings`.
+     * - All addresses in `to[]` MUST not own a token type under `id`.
      *
      * Emits a {TransfersMulti} event.
      *
@@ -120,16 +120,23 @@ interface ISBTERC1155DS {
 The token was designed as Soulbound in order to it being nontransferable. This is because the type of problem this standard aims to solve requires this non-transferability.
 
 ### SBT as an extension to IERC1155
-We believe that Soulbound Token serves as a specialized subset of the existing ERC1155 tokens. The advantage of such design is seamless compatibility of Soulbound Token with existing NFT services. Service providers can treat SBTs like NFTs and do not need to make drastic changes to their existing codebase. 
+We believe that Soulbound Token serves as a specialized subset of the existing ERC1155 tokens. The advantage of such design is seamless compatibility of Soulbound Token with existing NFT services. Service providers can treat SBTs like NFTs and do not need to make drastic changes to their existing codebase.
+Making the standard compatible with EIP-1155 also allows for SBT binding to Smart Contracts, and this can allow for a whole new world of possibilities.
 
 ### Double-Signature
 The Double-Signature functionality was implemented to prevent the receival of unwanted tokens. As this standard is aimed to academic certification, this functionality mimics the real world: You have to accept a degree for it to be yours, for example.
 
-### Only transferable by token creator/minter (Reference Implementation)
+### Only transferable by token creator/minter or allowed operators (Reference Implementation)
 As the problem this standard aims to solve is academic certification, this characteristic also tends to mimic real world functionality. Only the creator/minter of the token under `id` will be able to transfer the token to new people (Semi-Fungible token). This allows for issuer traceability and connections with a DAO Voting System, for example, in order to only allow emission to voted and trusted addresses. Regardless of this, users have full power over their tokens: They can claim/reject them, and burn them afterwards. Token creators/minters have no control over a token after minting.
 
-### Metadata & Multi-token.
-The EIP1155 Metadata Interface was implemented for more compatibility with EIP-1155. Despite this, our standard only stores the base URI (For example, "https://ipfs.io/ipfs/") and saves the IPFS Hash for each id (Example: "QmeHSRgayHELM7gJSFzc3cFRU9Vx1KYQdK2BHy5vpTF7uT"). When `uri(...)` function is called, these two strings are concatenated to generate a unique metadata under each token id, allowing for a multi token standard. The multi token functionality was used in order for easier organization, all emitted tokens are stored in the same contract, preventing redundant bytecode from being deployed to the blockchain. It also facilitates transfer to token issuers.
+### Custom error messages instead of require statements.
+After testing the standard, we found out that using custom errors was way more gas efficient than using require()
+ statements.
+### Metadata.
+The EIP1155 Metadata Interface was implemented for more compatibility with EIP-1155. Despite this, our standard only stores the base URI (**For example**, "https://ipfs.io/ipfs/") and saves the IPFS Hash for each id (**Example:** "QmeHSRgayHELM7gJSFzc3cFRU9Vx1KYQdK2BHy5vpTF7uT"). When `uri(...)` function is called, these two strings are concatenated to generate a unique metadata under each token id, allowing for a multi token standard.
+
+### Multi token
+The multi token functionality was used in order for easier organization, all emitted tokens are stored in the same contract, preventing redundant bytecode from being deployed to the blockchain. It also facilitates transfer to token issuers, given that all issued tokens are stored and can be accessed under the same address.
 
 See [EIP-1155](https://eips.ethereum.org/EIPS/eip-1155)
 

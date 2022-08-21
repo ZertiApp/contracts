@@ -16,7 +16,7 @@ interface ISBTERC1155DS {
     error AddressZero();
 
     // Error - `account` already owns `id` or has `id` under pending
-    error AlreadyAsignee(address account, uint256 id);
+    error AlreadyAssignee(address account, uint256 id);
 
     /**
      * @dev Emitted when `newOwner` claims or rejects pending `id`.
