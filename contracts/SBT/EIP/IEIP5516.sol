@@ -50,7 +50,7 @@ interface IEIP5516 {
      * Emits a {TokenClaimed} event.
      *
      */
-    function claimOrReject(uint256 _id,bool _action) external;
+    function claimOrReject(uint256 _id, bool _action) external;
 
     /**
      * @dev Transfers `_id` token from `_from` to every address at `_to[]`.
