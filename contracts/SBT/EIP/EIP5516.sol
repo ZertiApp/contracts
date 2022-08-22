@@ -1,9 +1,10 @@
-//SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: CC0-1.0
 
 /**
- * @title Token contract
- * @author Matias Arazi & Lucas Grasso Ramos
- * @notice MultiSig, Semi-Fungible, SoulBound Token standard for academic certification.
+ * @notice Reference implementation of the eip-5516 interface.
+ * @author Matias Arazi<matiasarazi@gmail.com> , Lucas Martín Grasso Ramos <lucasgrassoramos@gmail.com> 
+ * See https://github.com/ethereum/EIPs/pull/5516
+ *
  */
 
 pragma solidity ^0.8.4;
@@ -15,14 +16,14 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./ISBTERC1155DS.sol";
+import "./IEIP5516.sol";
 
-contract SBTERC1155DS is
+contract EIP5516 is
     Context,
     ERC165,
     IERC1155,
     IERC1155MetadataURI,
-    ISBTERC1155DS
+    IEIP5516
 {
     using Address for address;
 
@@ -74,7 +75,7 @@ contract SBTERC1155DS is
         return
             interfaceId == type(IERC1155).interfaceId ||
             interfaceId == type(IERC1155MetadataURI).interfaceId ||
-            interfaceId == type(ISBTERC1155DS).interfaceId ||
+            interfaceId == type(IEIP5516).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -375,6 +376,7 @@ contract SBTERC1155DS is
         address from,
         address[] memory to,
         uint256 id,
+        uint256 amount,
         bytes memory data
     ) external virtual override {
         if(tokens[id].creator != from){
@@ -383,7 +385,7 @@ contract SBTERC1155DS is
             }
         }
 
-        _batchTransfer(from, to, id, data);
+        _batchTransfer(from, to, id, amount, data);
     }
 
     /**
@@ -438,8 +440,10 @@ contract SBTERC1155DS is
         address from,
         address[] memory to,
         uint256 id,
+        uint256 amount,
         bytes memory data
     ) internal virtual {
+        if (amount != 1) revert("Can only transfer one token");
         if (from != tokens[id].creator) revert Unauthorized(from, id);
 
         address operator = _msgSender();
@@ -460,7 +464,7 @@ contract SBTERC1155DS is
             }
         }
 
-        emit TransferMulti(from, to, id);
+        emit TransferMulti(from, to, amount, id);
 
         _beforeBatchedTokenTransfer(operator, from, to, id, data);
     }

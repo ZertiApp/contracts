@@ -1,13 +1,14 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 
 pragma solidity ^0.8.4;
 
 /**
     @title Soulbound, Multi-Token, Semi-fungible, Double-Signature Standard.
+    @notice Interface of the eip-5516 
     Note: The ERC-165 identifier for this interface is 0xb86868e0.
  */
 
-interface ISBTERC1155DS {
+interface IEIP5516 {
 
     // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
     error Unauthorized(address account, uint256 id);
@@ -26,7 +27,7 @@ interface ISBTERC1155DS {
     /**
      * @dev Emitted when `from` transfers token under `id` to every address at `to[]`.
      */
-    event TransferMulti(address indexed from, address[] indexed to, uint256 indexed id);
+    event TransferMulti(address indexed from, address[] indexed to, uint256 amount, uint256 indexed id);
 
     /**
      * @dev Get tokens owned by a given address
@@ -64,6 +65,6 @@ interface ISBTERC1155DS {
      * Emits a {TransfersMulti} event.
      *
      */
-    function batchTransfer (address from, address[] memory to, uint256 id, bytes memory data) external;
+    function batchTransfer (address from, address[] memory to, uint256 id, uint256 amount, bytes memory data) external;
 
 }
