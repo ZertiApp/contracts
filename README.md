@@ -1,31 +1,8 @@
 # Zerti
 
----
+Zerti is a Web3 based project whose objective is to secure the validity and trustability of certifications, aptitudes and degrees emitted by institutions, organizations or enterprises/corporations, relying on the immutability and transparency of the Blockchain. This makes for a more trustable Curriculum Vitae and complements the employer-employee relation, which makes finding jobs easier for everyone.
 
-## Smart contracts for the Zerti app.
+Here(In the main branch) you will find the contracts currently used in the application.  
 
-__How it works:__
-
-* VoteFactory & EIP1167 Contracts - Use of the EIP-1167 "Minimal Proxy" standard for cheap cloning and usage of vote contract.
-* Vote Contract - Ballot and pool reward system for entity validation.
-
----
-
-Docs at:
-https://docs.zerti.com.ar
-
----
-# The Zerti team:
-
-### Blockchain Developers:
-* [Matias Arazi](https://github.com/MatiArazi)
-* [Lucas Grasso](https://github.com/LucasGrasso)
-### Web developers
-* [Ilan Tobal](https://github.com/IlanTobal)
-* [Naomi Couriel](https://github.com/naomicouriel)
-* [Nicolas Halperin](https://github.com/NicoHalpe)
-### Design and UX:
-* Victoria Salgado
-* Matilde Azubel
-
+Test the app [here](https://dev.zerti.com.ar/)
 
