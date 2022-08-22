@@ -3,9 +3,9 @@
 pragma solidity ^0.8.4;
 
 /**
-    @title Soulbound, Multi-Token, Semi-fungible, Double-Signature Standard.
+    @title Soulbound, Multi-Token standard.
     @notice Interface of the eip-5516 
-    Note: The ERC-165 identifier for this interface is 0xb86868e0.
+    Note: The ERC-165 identifier for this interface is 0x0f7946c0.
  */
 
 interface IEIP5516 {
