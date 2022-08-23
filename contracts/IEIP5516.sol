@@ -11,9 +11,9 @@ pragma solidity ^0.8.4;
 interface IEIP5516 {
     
     /**
-     * @dev Emitted when `newOwner` claims or rejects pending `id`.
+     * @dev Emitted when `newOwner` claims or rejects pending tokens under `ids.
      */
-    event TokenClaimed(address indexed operator, address indexed newOwner, uint256 id);
+    event TokenClaimed(address indexed operator, bool[] indexed actions, uint256[] indexed ids);
 
     /**
      * @dev Emitted when `from` transfers token under `id` to every address at `to[]`.
@@ -41,7 +41,23 @@ interface IEIP5516 {
      * Emits a {TokenClaimed} event.
      *
      */
-    function claimOrReject(uint256 _id, bool _action) external;
+    function claimOrReject(uint256 id, bool actions) external;
+
+    /**
+     * For each `id` `action` pair
+     *  @dev Claims or Reject pending `_id` from address `_account`.
+     *
+     *  Requirements:
+     *  - `account` cannot be the zero address.
+     *  - `account` MUST have a pending token under `id` at the moment of call.
+     *  - `account` MUST not own a token under `id` at the moment of call.
+     *
+     * Emits a {TokenClaimed} event.
+     *
+     */
+    function claimOrRejectBatch(uint256[] memory ids, bool[] memory actions) external;
+
+
 
     /**
      * @dev Transfers `_id` token from `_from` to every address at `_to[]`.

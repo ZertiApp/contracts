@@ -2,7 +2,8 @@
 
 /**
  * @notice Reference implementation of the eip-5516 interface.
- * @author Matias Arazi<matiasarazi@gmail.com> , Lucas Martín Grasso Ramos <lucasgrassoramos@gmail.com> 
+ * Note: this implementation only allows for each user to own only 1 token type for each `id`.
+ * @author Matias Arazi<matiasarazi@gmail.com> , Lucas Martín Grasso Ramos <lucasgrassoramos@gmail.com>
  * See https://github.com/ethereum/EIPs/pull/5516
  *
  */
@@ -18,13 +19,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./IEIP5516.sol";
 
-contract EIP5516 is
-    Context,
-    ERC165,
-    IERC1155,
-    IERC1155MetadataURI,
-    IEIP5516
-{
+contract EIP5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IEIP5516 {
     using Address for address;
 
     // Used for making each token unique, Mantains ID registry and quantity of tokens minted.
@@ -32,9 +27,6 @@ contract EIP5516 is
 
     // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
     string private _uri;
-
-    // Mapping to token id to Token struct[creator, data (IPFS-Hash) ]
-    mapping(uint256 => Token) private tokens; // id to Token
 
     // Mapping from token ID to account balances
     mapping(address => mapping(uint256 => bool)) private _balances;
@@ -45,24 +37,11 @@ contract EIP5516 is
     // Mapping from account to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
-    error Unauthorized(address account, uint256 id);
+    // Mapping from ID to token type `id` minter address.
+    mapping(uint256 => address) private _tokenMinters;
 
-    // Error - Address zero is passed as a function parameter
-    error AddressZero();
-
-    // Error - `account` already owns `id` or has `id` under pending
-    error AlreadyAssignee(address account, uint256 id);
-    
-    /**
-     * @dev Main token struct.
-     * @param creator Minter/Creator of the token
-     * @param data IPFS Hash of the token(In order to save gas, do not use the full URI)
-     */
-    struct Token {
-        address creator;
-        string data;
-    }
+    // Mapping from ID to token type URI.
+    mapping(uint256 => string) private _tokenURIs;
 
     /**
      * @dev Sets base uri for tokens. Preferably "https://ipfs.io/ipfs/"
@@ -98,7 +77,7 @@ contract EIP5516 is
         override
         returns (string memory)
     {
-        return string(abi.encodePacked(_uri, tokens[_id].data));
+        return string(abi.encodePacked(_uri, _tokenURIs[_id]));
     }
 
     /**
@@ -115,7 +94,7 @@ contract EIP5516 is
         override
         returns (uint256)
     {
-        if (account == address(0)) revert AddressZero();
+        require (account != address(0),"EIP5516: Address zero error");
         if (_balances[account][id]) {
             return 1;
         } else {
@@ -137,8 +116,7 @@ contract EIP5516 is
         override
         returns (uint256[] memory)
     {
-        if (accounts.length != ids.length)
-            revert("Accounts and ids length mismatch");
+        require(accounts.length == ids.length, "EIP5516: Array lengths mismatch");
 
         uint256[] memory batchBalances = new uint256[](accounts.length);
 
@@ -164,7 +142,7 @@ contract EIP5516 is
         override
         returns (uint256[] memory)
     {
-        if (account == address(0)) revert AddressZero();
+        require (account != address(0),"EIP5516: Address zero error");
 
         uint256 _tokenCount = 0;
         for (uint256 i = 1; i <= nonce; ) {
@@ -197,14 +175,14 @@ contract EIP5516 is
      * - `account` cannot be the zero address.
      *
      */
-    function pendingFrom (address account)
+    function pendingFrom(address account)
         public
         view
         virtual
         override
         returns (uint256[] memory)
     {
-        if (account == address(0)) revert AddressZero();
+        require (account != address(0),"EIP5516: Address zero error");
 
         uint256 _tokenCount = 0;
         for (uint256 i = 1; i <= nonce; ) {
@@ -241,7 +219,7 @@ contract EIP5516 is
         virtual
         returns (string[] memory)
     {
-        if (account == address(0)) revert AddressZero();
+        require (account != address(0),"EIP5516: Address zero error");
 
         uint256[] memory ownedTokens = tokensFrom(account);
         uint256 _nTokens = ownedTokens.length;
@@ -249,7 +227,7 @@ contract EIP5516 is
 
         for (uint256 i = 0; i < _nTokens; ) {
             tokenURIS[i] = string(
-                abi.encodePacked(_uri, tokens[ownedTokens[i]].data)
+                abi.encodePacked(_uri, _tokenURIs[ownedTokens[i]])
             );
 
             unchecked {
@@ -273,7 +251,7 @@ contract EIP5516 is
         virtual
         returns (string[] memory)
     {
-        if (account == address(0)) revert AddressZero();
+        require (account != address(0),"EIP5516: Address zero error");
 
         uint256[] memory _pendingsTokens = pendingFrom(account);
         uint256 _nTokens = _pendingsTokens.length;
@@ -281,7 +259,7 @@ contract EIP5516 is
 
         for (uint256 i = 0; i < _nTokens; ) {
             tokenURIS[i] = string(
-                abi.encodePacked(_uri, tokens[_pendingsTokens[i]].data)
+                abi.encodePacked(_uri, _tokenURIs[_pendingsTokens[i]])
             );
 
             unchecked {
@@ -338,7 +316,8 @@ contract EIP5516 is
             amounts,
             _bData
         );
-        tokens[nonce] = Token(_account, _data);
+        _tokenURIs[nonce] = _data;
+        _tokenMinters[nonce] = _account;
         emit TransferSingle(operator, address(0), operator, nonce, 1);
         _afterTokenTransfer(
             operator,
@@ -364,18 +343,14 @@ contract EIP5516 is
         uint256 amount,
         bytes memory data
     ) public virtual override {
-        if (amount != 1) revert("Can only transfer one token");
-        if(tokens[id].creator != from){
-            if(!isApprovedForAll(tokens[id].creator, _msgSender())) {
-                revert Unauthorized(from,id);
-            }
-        }
+        require (amount == 1, "EIP5516: Can only transfer one token");
+        require(_msgSender() == _tokenMinters[id] || isApprovedForAll(_tokenMinters[id], _msgSender()), "EIP5516: Unauthorized");
 
         _safeTransferFrom(from, to, id, amount, data);
     }
 
     /**
-     * @dev See {ISBTERC1155DS-batchTransfer}
+     * @dev See {eip-5516-batchTransfer}
      *
      * Requirements:
      * - 'from' must be the creator(minter) of `id` or must have allowed _msgSender() as an operator.
@@ -388,11 +363,8 @@ contract EIP5516 is
         uint256 amount,
         bytes memory data
     ) external virtual override {
-        if(tokens[id].creator != from){
-            if(!isApprovedForAll(tokens[id].creator, _msgSender())) {
-                revert Unauthorized(_msgSender(), id);
-            }
-        }
+        require(amount == 1,"EIP5516: Can only transfer one token");
+        require(_msgSender() == _tokenMinters[id] || isApprovedForAll(_tokenMinters[id], _msgSender()), "EIP5516: Unauthorized");
 
         _batchTransfer(from, to, id, amount, data);
     }
@@ -419,9 +391,9 @@ contract EIP5516 is
         uint256 amount,
         bytes memory data
     ) internal virtual {
-        if (to == address(0)) revert AddressZero();
-        if (_pendings[to][id] == true || _balances[to][id] == true)
-            revert AlreadyAssignee(to, id);
+        require (from != address(0),"EIP5516: Address zero error");
+        require(_pendings[to][id] == false && _balances[to][id] == false,"EIP5516: Already Asignee");
+
 
         address operator = _msgSender();
 
@@ -442,7 +414,7 @@ contract EIP5516 is
      * Transfers `_id` token from `_from` to every address at `_to[]`.
      *
      * Requirements:
-     * - See {ISBTERC1155DS-safeMultiTransfer}.
+     * - See {eip-5516-safeMultiTransfer}.
      *
      */
     function _batchTransfer(
@@ -452,8 +424,6 @@ contract EIP5516 is
         uint256 amount,
         bytes memory data
     ) internal virtual {
-        if (amount != 1) revert("Can only transfer one token");
-        if (from != tokens[id].creator) revert Unauthorized(from, id);
 
         address operator = _msgSender();
 
@@ -462,9 +432,8 @@ contract EIP5516 is
         for (uint256 i = 0; i < to.length; ) {
             address _to = to[i];
 
-            if (_to == address(0)) revert AddressZero();
-            if (_pendings[_to][id] == true) revert AlreadyAssignee(_to, id);
-            if (_balances[_to][id] == true) revert AlreadyAssignee(_to, id);
+            require (_to != address(0),"EIP5516: Address zero error");
+            require(_pendings[_to][id] == false && _balances[_to][id] == false,"EIP5516: Already Asignee");
 
             _pendings[_to][id] = true;
 
@@ -479,13 +448,34 @@ contract EIP5516 is
     }
 
     /**
-     * See {ISBTERC1155DS-_claim}
+     * See {eip-5516-_claimOrReject}
      * If action == 1-Claim _pendings token
      * If action == 0-Reject _pendings token
      */
     function claimOrReject(uint256 id, bool _action) external virtual override {
         address operator = _msgSender();
-        _claimOrReject(operator, _action, id);
+        _claimOrReject(operator, id, _action);
+    }
+
+    /**
+     * For each `id`-`action` pair
+     *  See {eip-5516-_claimOrReject}
+     *  If action == 1-Claim _pendings token
+     *  If action == 0-Reject _pendings token
+     */
+    function claimOrRejectBatch(uint256[] memory ids, bool[] memory actions)
+        external
+        virtual
+        override
+    {
+        require(
+            ids.length == actions.length,
+            "EIP5516: Array lenghts mismatch"
+        );
+
+        address operator = _msgSender();
+        
+        _claimOrRejectBatch(operator, ids, actions);
     }
 
     /**
@@ -501,28 +491,74 @@ contract EIP5516 is
      */
     function _claimOrReject(
         address account,
-        bool action,
-        uint256 id
+        uint256 id,
+        bool action
     ) internal virtual {
-        if (_pendings[account][id] == false || _balances[account][id] == true)
-            revert("Not claimable");
+        require(
+                _pendings[account][id] == true &&
+                    _balances[account][id] == false,
+                "EIP5516: Not claimable"
+            );
 
-        address _newOwner;
+        bool[] memory actions = new bool[](1);
+        actions[0] = action;
+        uint256[] memory ids = _asSingletonArray(id);
 
-        if (action) {
-            _newOwner = account;
-        } else {
-            _newOwner = address(0);
-        }
-
-        _beforeTokenClaim(account, _newOwner, id);
+        _beforeTokenClaim(account, actions, ids);
 
         _balances[account][id] = action;
         _pendings[account][id] = false;
 
-        emit TokenClaimed(account, _newOwner, id);
+        delete _pendings[account][id];
 
-        _afterTokenClaim(account, _newOwner, id);
+        emit TokenClaimed(account, actions, ids);
+
+        _afterTokenClaim(account, actions, ids);
+    }
+
+    /**
+     * For each `id`-`action`
+     *  @dev Claims or Reject _pendings `_id` from address `_account`.
+     *
+     *  Requirements:
+     *  - `account` cannot be the zero address.
+     *  - `account` must have a _pendings token under `id` at the moment of call.
+     *  - `account` mUST not own a token under `id` at the moment of call.
+     *
+     *  Emits a {TokenClaimed} event.
+     *
+     */
+    function _claimOrRejectBatch(
+        address account,
+        uint256[] memory ids,
+        bool[] memory actions
+    ) internal virtual {
+        uint256 totalIds = ids.length;
+
+        _beforeTokenClaim(account, actions, ids);
+
+        for (uint256 i = 0; i < totalIds; ) {
+            uint256 id = ids[i];
+
+            require(
+                _pendings[account][id] == true &&
+                    _balances[account][id] == false,
+                "EIP5516: Not claimable"
+            );
+
+            _balances[account][id] = actions[i];
+            _pendings[account][id] = false;
+
+            delete _pendings[account][id];
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        emit TokenClaimed(account, actions, ids);
+
+        _afterTokenClaim(account, actions, ids);
     }
 
     /**
@@ -534,7 +570,7 @@ contract EIP5516 is
      * - `account` must have `_id` token.
      */
     function _burn(address _account, uint256 id) internal virtual {
-        if (_balances[_account][id] == false) revert Unauthorized(_account, id);
+        require(_balances[_account][id] == true, "EIP5516: Unauthorized");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
@@ -542,7 +578,7 @@ contract EIP5516 is
 
         _beforeTokenTransfer(operator, operator, address(0), ids, amounts, "");
 
-        _balances[_account][id] = false;
+        delete _balances[_account][id];
 
         emit TransferSingle(operator, operator, address(0), id, 1);
         _beforeTokenTransfer(operator, operator, address(0), ids, amounts, "");
@@ -680,33 +716,33 @@ contract EIP5516 is
     /**
      * @dev Hook that is called before any token claim.
      +
-     * Calling conditions (for each `newOwner` and `id` pair):
+     * Calling conditions (for each `action` and `id` pair):
      *
      * - A token under `id` must exist.
-     * - When `newOwner` is non-zero, a token typen under `id` will now be claimed and owned by`to`.
-     * - When `newOwner` is zero, a token typen under `id` will now be rejected.
+     * - When `action` is non-zero, a token under `id` will now be claimed and owned by`operator`.
+     * - When `action` is false, a token under `id` will now be rejected.
      * 
      */
     function _beforeTokenClaim(
         address operator,
-        address newOwner,
-        uint256 id
+        bool[] memory actions,
+        uint256[] memory ids
     ) internal virtual {}
 
     /**
-     * @dev Hook that is called before any token claim.
+     * @dev Hook that is called after any token claim.
      +
-     * Calling conditions (for each `newOwner` and `id` pair):
+     * Calling conditions (for each `action` and `id` pair):
      *
      * - A token under `id` must exist.
-     * - When `newOwner` is non-zero, a token under `id` will now be claimed and owned by`to`.
-     * - When `newOwner` is zero, a token under `id` will now be rejected.
+     * - When `action` is non-zero, a token under `id` is now owned by`operator`.
+     * - When `action` is false, a token under `id` was rejected.
      * 
      */
     function _afterTokenClaim(
         address operator,
-        address newOwner,
-        uint256 id
+        bool[] memory actions,
+        uint256[] memory ids
     ) internal virtual {}
 
     function _asSingletonArray(uint256 element)
@@ -763,5 +799,4 @@ contract EIP5516 is
         uint256[] memory amounts,
         bytes memory data
     ) public virtual override {}
-
 }
