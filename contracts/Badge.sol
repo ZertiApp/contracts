@@ -8,9 +8,9 @@
 
 pragma solidity ^0.8.4;
 
-import "./EIP5516.sol";
+import "./ERC5516.sol";
 
-contract Badge is EIP5516 {
+contract Badge is ERC5516 {
 
     // Used as Name for the collection
     string public name;
@@ -21,7 +21,7 @@ contract Badge is EIP5516 {
     // Used as Contract Metadata URI
     string public _contractUri;
 
-    constructor(string memory _uri, string memory _name, string memory _symbol, string memory contractUri_) EIP5516 (_uri) {
+    constructor(string memory _uri, string memory _name, string memory _symbol, string memory contractUri_) ERC5516 (_uri) {
         name = _name;
         symbol = _symbol;
         _contractUri = contractUri_;
