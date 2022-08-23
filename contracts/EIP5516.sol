@@ -474,7 +474,7 @@ contract EIP5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IEIP5516 {
         );
 
         address operator = _msgSender();
-        
+
         _claimOrRejectBatch(operator, ids, actions);
     }
 
@@ -562,26 +562,60 @@ contract EIP5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IEIP5516 {
     }
 
     /**
-     * @dev Destroys `_id` token from `_account`
+     * @dev Destroys `id` token from `account`
      *
-     * Emits a {Transfer} event with `to` set to the zero address.
+     * Emits a {TransferSingle} event with `to` set to the zero address.
      *
      * Requirements:
-     * - `account` must have `_id` token.
+     * - `account` must own `_id` token.
      */
-    function _burn(address _account, uint256 id) internal virtual {
-        require(_balances[_account][id] == true, "EIP5516: Unauthorized");
+    function _burn(address account, uint256 id) internal virtual {
+        require(_balances[account][id] == true, "EIP5516: Unauthorized");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
         uint256[] memory amounts = _asSingletonArray(1);
 
-        _beforeTokenTransfer(operator, operator, address(0), ids, amounts, "");
+        _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
 
-        delete _balances[_account][id];
+        delete _balances[account][id];
 
-        emit TransferSingle(operator, operator, address(0), id, 1);
-        _beforeTokenTransfer(operator, operator, address(0), ids, amounts, "");
+        emit TransferSingle(operator, account, address(0), id, 1);
+        _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
+    }
+
+    /**
+     * @dev Destroys all tokens under `ids`from `account`
+     *
+     * Emits a {TransferBatch} event with `to` set to the zero address.
+     *
+     * Requirements:
+     * - `account` must own all tokens under `ids`.
+     */
+    function _burnBatch(address account, uint256[] memory ids) internal virtual {
+        uint256 totalIds = ids.length;
+        address operator = _msgSender();
+        uint256[] memory amounts = _asSingletonArray(totalIds);
+        uint256[] memory values = _asSingletonArray(0);
+
+        _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
+
+        for(uint256 i = 0; i < totalIds;){
+            uint256 id = ids[i];
+
+            require(_balances[account][id] == true, "EIP5516: Unauthorized");
+
+            delete _balances[account][id];
+
+            unchecked{
+                ++i;
+            }
+        }
+
+        emit TransferBatch(operator, account, address(0), ids, values);
+
+       _afterTokenTransfer(operator, account, address(0), ids, amounts, "");
+
     }
 
     /**
