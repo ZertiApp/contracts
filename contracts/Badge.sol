@@ -38,6 +38,11 @@ contract Badge is EIP5516 {
         _burn(msg.sender, id);
     }
 
+    // Burns (deletes tokens)
+    function burnBatch(uint256[] memory ids) external {
+        _burnBatch(msg.sender, ids);
+    }
+
     /**
      * @dev See https://docs.opensea.io/docs/contract-level-metadata
      */
