@@ -45,6 +45,15 @@ contract EIP5516 is
     // Mapping from account to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
+    // Error - `account` is not creator of `id` (any transfer-like function) or does not own `id` (burn)
+    error Unauthorized(address account, uint256 id);
+
+    // Error - Address zero is passed as a function parameter
+    error AddressZero();
+
+    // Error - `account` already owns `id` or has `id` under pending
+    error AlreadyAssignee(address account, uint256 id);
+    
     /**
      * @dev Main token struct.
      * @param creator Minter/Creator of the token
