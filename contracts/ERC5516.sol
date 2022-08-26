@@ -22,7 +22,7 @@ import "./IERC5516.sol";
 contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
     using Address for address;
 
-    // Used for making each token unique, Mantains ID registry and quantity of tokens minted.
+    // Used for making each token unique, Maintains ID registry and quantity of tokens minted.
     uint256 private nonce;
 
     // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
@@ -335,7 +335,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
      * - `from` must be the creator(minter) of the token under `id`.
      * - `to` must be non-zero.
      * - `to` must have the token `id` marked as _pendings.
-     * - `to` must must not own a token type under `id`.
+     * - `to` must not own a token type under `id`.
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
      *   acceptance magic value.
      *
@@ -350,7 +350,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         require(from != address(0), "EIP5516: Address zero error");
         require(
             _pendings[to][id] == false && _balances[to][id] == false,
-            "EIP5516: Already Asignee"
+            "EIP5516: Already Assignee"
         );
 
         address operator = _msgSender();
@@ -392,7 +392,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
             require(_to != address(0), "EIP5516: Address zero error");
             require(
                 _pendings[_to][id] == false && _balances[_to][id] == false,
-                "EIP5516: Already Asignee"
+                "EIP5516: Already Assignee"
             );
 
             _pendings[_to][id] = true;
@@ -419,10 +419,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         uint256 id,
         bool action
     ) external virtual override {
-        require(
-            _msgSender() == account || isApprovedForAll(account, _msgSender()),
-            "EIP5516: Unauthorized"
-        );
+        require(_msgSender() == account, "EIP5516: Unauthorized");
 
         _claimOrReject(account, id, action);
     }
@@ -443,13 +440,10 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
     ) external virtual override {
         require(
             ids.length == actions.length,
-            "EIP5516: Array lenghts mismatch"
+            "EIP5516: Array lengths mismatch"
         );
 
-        require(
-            _msgSender() == account || isApprovedForAll(account, _msgSender()),
-            "EIP5516: Unauthorized"
-        );
+        require(_msgSender() == account, "EIP5516: Unauthorized");
 
         _claimOrRejectBatch(account, ids, actions);
     }
@@ -567,7 +561,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
     }
 
     /**
-     * @dev Destroys all tokens under `ids`from `account`
+     * @dev Destroys all tokens under `ids` from `account`
      *
      * Emits a {TransferBatch} event with `to` set to the zero address.
      *
@@ -631,10 +625,10 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
      *
      * - `amount` will always be and must be equal to 1.
      * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * of token type `id` will be  transferred to `to`.
+     * of token type `id` will be transferred to `to`.
      * - When `from` is zero, `amount` tokens of token type `id` will be minted
      * for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * - When `to` is zero, `amount` of ``from``'s tokens of token type `id`
      * will be burned.
      * - `from` and `to` are never both zero.
      *
@@ -660,10 +654,10 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
      *
      * - `amount` will always be and must be equal to 1.
      * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * of token type `id` will be  transferred to `to`.
+     * of token type `id` will be transferred to `to`.
      * - When `from` is zero, `amount` tokens of token type `id` will be minted
      * for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * - When `to` is zero, `amount` of ``from``'s tokens of token type `id`
      * will be burned.
      * - `from` and `to` are never both zero.
      *
@@ -689,10 +683,10 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
      *
      * - `amount` will always be and must be equal to 1.
      * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * of token type `id` will be  transferred to `to`.
+     * of token type `id` will be transferred to `to`.
      * - When `from` is zero, `amount` tokens of token type `id` will be minted
      * for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * - When `to` is zero, `amount` of ``from``'s tokens of token type `id`
      * will be burned.
      * - `from` and `to` are never both zero.
      *
@@ -717,10 +711,10 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
      *
      * - `amount` will always be and must be equal to 1.
      * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * of token type `id` will be  transferred to `to`.
+     * of token type `id` will be transferred to `to`.
      * - When `from` is zero, `amount` tokens of token type `id` will be minted
      * for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
+     * - When `to` is zero, `amount` of ``from``'s tokens of token type `id`
      * will be burned.
      * - `from` and `to` are never both zero.
      *
