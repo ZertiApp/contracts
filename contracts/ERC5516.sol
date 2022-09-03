@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: CC0-1.0
 
 /**
- * @notice Reference implementation of the eip-5516 interface.
+ * @notice Implementation of the eip-5516 interface.
  * Note: this implementation only allows for each user to own only 1 token type for each `id`.
  * @author Matias Arazi <matiasarazi@gmail.com> , Lucas Martín Grasso Ramos <lucasgrassoramos@gmail.com>
- * See https://github.com/ethereum/EIPs/pull/5516
+ * See https://eips.ethereum.org/EIPS/eip-5516
  *
  */
 
