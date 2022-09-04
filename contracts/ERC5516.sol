@@ -218,6 +218,70 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
     }
 
     /**
+     * @dev Get the URI of the tokens marked as pending of a given address.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     *
+     */
+    function tokensURIFrom(address account)
+        external
+        view
+        virtual
+        returns (string[] memory)
+    {
+        require(account != address(0), "EIP5516: Address zero error");
+
+        (uint256[] memory ownedTokens) = tokensFrom(account);
+        uint256 _nTokens = ownedTokens.length;
+        string[] memory tokenURIS = new string[](_nTokens);
+        
+        for (uint256 i = 0; i < _nTokens; ) {
+            tokenURIS[i] = string(
+                abi.encodePacked(_uri, _tokenURIs[ownedTokens[i]])
+            );
+
+            unchecked {
+                ++i;
+            }
+        } 
+        return tokenURIS;
+    }
+
+    /**
+     * @dev Get the URI of the tokens owned by a given address.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     *
+     */
+    function pendingURIFrom(address account)
+        external
+        view
+        virtual
+        returns (string[] memory)
+    {
+        require(account != address(0), "EIP5516: Address zero error");
+
+        (uint256[] memory pendingTokens) = pendingFrom(account);
+        uint256 _nTokens = pendingTokens.length;
+        string[] memory tokenURIS = new string[](_nTokens);
+        
+        for (uint256 i = 0; i < _nTokens; ) {
+            tokenURIS[i] = string(
+                abi.encodePacked(_uri, _tokenURIs[pendingTokens[i]])
+            );
+
+            unchecked {
+                ++i;
+            }
+        } 
+        return tokenURIS;
+    }
+
+    /**
      * @dev See {IERC1155-setApprovalForAll}.
      */
     function setApprovalForAll(address operator, bool approved)
