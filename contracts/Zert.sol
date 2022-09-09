@@ -10,7 +10,7 @@ pragma solidity ^0.8.4;
 
 import "./ERC5516.sol";
 
-contract Badge is ERC5516 {
+contract Zert is ERC5516 {
 
     // Used as Name for the collection
     string public name;
