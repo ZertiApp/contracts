@@ -20,6 +20,8 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "./IERC5516.sol";
 
 contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
+
+    bytes32 internal constant NAMESPACE = keccak256("ERC5516.facet");
     using Address for address;
 
     // Used for making each token unique, Maintains ID registry and quantity of tokens minted.
