@@ -17,9 +17,9 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./interfaces/IDiamondFacet.sol";
-import "./interfaces/IERC5516.sol";
-import "./base/EternalStorage.sol";
+import "../interfaces/IDiamondFacet.sol";
+import "../interfaces/IERC5516.sol";
+import "../base/EternalStorage.sol";
 
 
 contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, IDiamondFacet, EternalStorage {
