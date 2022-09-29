@@ -6,7 +6,7 @@
  * @notice MultiSig, Semi-Fungible, SoulBound Token standard for academic certification.
  */
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.8;
 
 import "./ERC5516.sol";
 

@@ -8,7 +8,7 @@
  *
  */
 
-pragma solidity ^0.8.4;
+pragma solidity >=0.8.9;
 
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -17,39 +17,48 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./IERC5516.sol";
+import "./interfaces/IDiamondFacet.sol";
+import "./interfaces/IERC5516.sol";
+import "./base/EternalStorage.sol";
 
-contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
-    bytes32 internal constant NAMESPACE = keccak256("ERC5516.facet");
+contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, IDiamondFacet, EternalStorage {
+    
     using Address for address;
-
-    // Used for making each token unique, Maintains ID registry and quantity of tokens minted.
-    uint256 private nonce;
-
-    // Used as the URI for all token types by relying on ID substitution, e.g. https://ipfs.io/ipfs/token.data
-    string private _uri;
-
-    // Mapping from token ID to account balances
-    mapping(address => mapping(uint256 => bool)) private _balances;
-
-    // Mapping from address to mapping id bool that states if address has tokens(under id) awaiting to be claimed
-    mapping(address => mapping(uint256 => bool)) private _pendings;
 
     // Mapping from account to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    // Mapping from ID to minter address.
-    mapping(uint256 => address) private _tokenMinters;
-
-    // Mapping from ID to URI.
-    mapping(uint256 => string) private _tokenURIs;
-
     /**
      * @dev Sets base uri for tokens. Preferably "https://ipfs.io/ipfs/"
      */
-    constructor(string memory uri_) {
-        _uri = uri_;
+    constructor(string memory uri_, string memory name_, string memory symbol_, string memory contractUri_) {
+        dataString["uri"] = uri_;
+        dataString["name"] = name_;
+        dataString["symbol"] = symbol_;
+        dataString["contractUri"] = contractUri_;
+    }
+
+    // IDiamondFacet
+    function getSelectors() public pure override returns (bytes memory) {
+        return
+            abi.encodePacked(
+                IERC5516.tokensFrom.selector,
+                IERC5516.pendingFrom.selector,
+                IERC5516.claimOrReject.selector,
+                IERC5516.claimOrRejectBatch.selector,
+                IERC5516.batchTransfer.selector,
+                IERC165.supportsInterface.selector,
+                IERC1155.balanceOf.selector,
+                IERC1155.balanceOfBatch.selector,
+                IERC1155.setApprovalForAll.selector,
+                IERC1155.isApprovedForAll.selector,
+                IERC1155.safeTransferFrom.selector,
+                IERC1155.safeBatchTransferFrom.selector,
+                IERC1155Receiver.onERC1155Received.selector,
+                IERC1155Receiver.onERC1155BatchReceived.selector,
+                IERC1155MetadataURI.uri.selector
+            );
     }
 
     /**
@@ -79,7 +88,16 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         override
         returns (string memory)
     {
-        return string(abi.encodePacked(_uri, _tokenURIs[_id]));
+        return string(abi.encodePacked(dataString["uri"], dataString[__i(_id, "tokenURIS")]));
+    }
+
+    /**
+     * @dev See https://docs.opensea.io/docs/contract-level-metadata
+     */
+    function contractUri() public view returns(string memory) {
+        return string(
+                abi.encodePacked(dataString["uri"], dataString["contractUri"])
+            );
     }
 
     /**
@@ -98,7 +116,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         returns (uint256)
     {
         require(account != address(0), "EIP5516: Address zero error");
-        if (_balances[account][id]) {
+        if (dataBool[__ai(account, id, "balances")]) {
             return 1;
         } else {
             return 0;
@@ -152,8 +170,8 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         require(account != address(0), "EIP5516: Address zero error");
 
         uint256 _tokenCount = 0;
-        for (uint256 i = 1; i <= nonce; ) {
-            if (_balances[account][i]) {
+        for (uint256 i = 1; i <= dataUint256["nonce"]; ) {
+            if (dataBool[__ai(account, i, "balances")]) {
                 unchecked {
                     ++_tokenCount;
                 }
@@ -165,8 +183,8 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
         uint256[] memory _ownedTokens = new uint256[](_tokenCount);
 
-        for (uint256 i = 1; i <= nonce; ) {
-            if (_balances[account][i]) {
+        for (uint256 i = 1; i <= dataUint256["nonce"]; ) {
+            if (dataBool[__ai(account, i, "balances")]) {
                 _ownedTokens[--_tokenCount] = i;
             }
             unchecked {
@@ -196,8 +214,8 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
         uint256 _tokenCount = 0;
 
-        for (uint256 i = 1; i <= nonce; ) {
-            if (_pendings[account][i]) {
+        for (uint256 i = 1; i <= dataUint256["nonce"]; ) {
+            if (dataBool[__ai(account, i, "pendings")]) {
                 ++_tokenCount;
             }
             unchecked {
@@ -207,8 +225,8 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
         uint256[] memory _pendingTokens = new uint256[](_tokenCount);
 
-        for (uint256 i = 1; i <= nonce; ) {
-            if (_pendings[account][i]) {
+        for (uint256 i = 1; i <= dataUint256["nonce"]; ) {
+            if (dataBool[__ai(account, i, "pendings")]) {
                 _pendingTokens[--_tokenCount] = i;
             }
             unchecked {
@@ -241,7 +259,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         
         for (uint256 i = 0; i < _nTokens; ) {
             tokenURIS[i] = string(
-                abi.encodePacked(_uri, _tokenURIs[ownedTokens[i]])
+                abi.encodePacked(dataString["uri"], dataString[__i(ownedTokens[i], "tokenURIS")])
             );
 
             unchecked {
@@ -273,7 +291,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         
         for (uint256 i = 0; i < _nTokens; ) {
             tokenURIS[i] = string(
-                abi.encodePacked(_uri, _tokenURIs[pendingTokens[i]])
+                abi.encodePacked(dataString["uri"], dataString[__i(pendingTokens[i], "tokenURIS")])
             );
 
             unchecked {
@@ -307,14 +325,21 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         return _operatorApprovals[account][operator];
     }
 
+    // Mints (creates a token)
+    function mint(string memory data) external {
+        if(keccak256(abi.encodePacked(data)) == keccak256("")) revert("Data is empty");
+        _mint(msg.sender, data);
+    }
+
     /**
      * @dev mints(creates) a token
      */
     function _mint(address account, string memory data) internal virtual {
         unchecked {
-            ++nonce;
+            ++dataUint256["nonce"];
         }
 
+        uint256 nonce = dataUint256["nonce"];
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(nonce);
         uint256[] memory amounts = _asSingletonArray(1);
@@ -328,8 +353,9 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
             amounts,
             _bData
         );
-        _tokenURIs[nonce] = data;
-        _tokenMinters[nonce] = account;
+
+        dataString[__i(nonce, "tokenURIS")] = data;
+        dataAddress[__i(nonce, "tokenMinters")] = account;
         emit TransferSingle(operator, address(0), operator, nonce, 1);
         _afterTokenTransfer(
             operator,
@@ -358,8 +384,8 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
     ) public virtual override {
         require(amount == 1, "EIP5516: Can only transfer one token");
         require(
-            _msgSender() == _tokenMinters[id] ||
-                isApprovedForAll(_tokenMinters[id], _msgSender()),
+            _msgSender() == dataAddress[__i(id, "tokenMinters")] ||
+                isApprovedForAll(dataAddress[__i(id, "tokenMinters")], _msgSender()),
             "EIP5516: Unauthorized"
         );
 
@@ -383,8 +409,8 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
     ) external virtual override {
         require(amount == 1, "EIP5516: Can only transfer one token");
         require(
-            _msgSender() == _tokenMinters[id] ||
-                isApprovedForAll(_tokenMinters[id], _msgSender()),
+            _msgSender() == dataAddress[__i(id, "tokenMinters")] ||
+                isApprovedForAll(dataAddress[__i(id, "tokenMinters")], _msgSender()),
             "EIP5516: Unauthorized"
         );
 
@@ -415,7 +441,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
     ) internal virtual {
         require(from != address(0), "EIP5516: Address zero error");
         require(
-            _pendings[to][id] == false && _balances[to][id] == false,
+            dataBool[__ai(to, id, "pendings")] == false && dataBool[__ai(to, id, "balances")] == false,
             "EIP5516: Already Assignee"
         );
 
@@ -426,7 +452,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
         _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-        _pendings[to][id] = true;
+        dataBool[__ai(to, id, "pendings")] = true;
 
         emit TransferSingle(operator, from, to, id, amount);
         _afterTokenTransfer(operator, from, to, ids, amounts, data);
@@ -457,11 +483,11 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
             require(_to != address(0), "EIP5516: Address zero error");
             require(
-                _pendings[_to][id] == false && _balances[_to][id] == false,
+                dataBool[__ai(_to, id, "pendings")] == false && dataBool[__ai(_to, id, "balances")] == false,
                 "EIP5516: Already Assignee"
             );
 
-            _pendings[_to][id] = true;
+           dataBool[__ai(_to, id, "pendings")] = true;
 
             unchecked {
                 ++i;
@@ -532,7 +558,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         bool action
     ) internal virtual {
         require(
-            _pendings[account][id] == true && _balances[account][id] == false,
+            dataBool[__ai(account, id, "pendings")] == true && dataBool[__ai(account, id, "balances")] == false,
             "EIP5516: Not claimable"
         );
 
@@ -544,10 +570,10 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
         _beforeTokenClaim(operator, account, actions, ids);
 
-        _balances[account][id] = action;
-        _pendings[account][id] = false;
+        dataBool[__ai(account, id, "balances")] = action;
+        dataBool[__ai(account, id, "pendings")] = false;
 
-        delete _pendings[account][id];
+        delete dataBool[__ai(account, id, "pendings")];
 
         emit TokenClaimed(operator, account, actions, ids);
 
@@ -581,24 +607,29 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
             uint256 id = ids[i];
 
             require(
-                _pendings[account][id] == true &&
-                    _balances[account][id] == false,
+                dataBool[__ai(account, id, "pendings")] == true &&
+                    dataBool[__ai(account, id, "balances")] == false,
                 "EIP5516: Not claimable"
             );
 
-            _balances[account][id] = actions[i];
-            _pendings[account][id] = false;
+            dataBool[__ai(account, id, "balances")] = actions[i];
 
-            delete _pendings[account][id];
+            delete dataBool[__ai(account, id, "pendings")];
 
             unchecked {
                 ++i;
             }
+            
         }
 
         emit TokenClaimed(operator, account, actions, ids);
 
         _afterTokenClaim(operator, account, actions, ids);
+    }
+
+    // Burns (deletes a token)
+    function burn(uint256 id) external {
+        _burn(msg.sender, id);
     }
 
     /**
@@ -612,7 +643,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
      *
      */
     function _burn(address account, uint256 id) internal virtual {
-        require(_balances[account][id] == true, "EIP5516: Unauthorized");
+        require(dataBool[__ai(account, id, "balances")] == true, "EIP5516: Unauthorized");
 
         address operator = _msgSender();
         uint256[] memory ids = _asSingletonArray(id);
@@ -620,10 +651,16 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
         _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
 
-        delete _balances[account][id];
+        delete dataBool[__ai(account, id, "balances")];
 
         emit TransferSingle(operator, account, address(0), id, 1);
         _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
+    }
+
+
+    // Burns (deletes tokens)
+    function burnBatch(uint256[] memory ids) external {
+        _burnBatch(msg.sender, ids);
     }
 
     /**
@@ -650,9 +687,9 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
         for (uint256 i = 0; i < totalIds; ) {
             uint256 id = ids[i];
 
-            require(_balances[account][id] == true, "EIP5516: Unauthorized");
+            require(dataBool[__ai(account, id, "balances")] == true, "EIP5516: Unauthorized");
 
-            delete _balances[account][id];
+            delete dataBool[__ai(account, id, "balances")];
 
             unchecked {
                 ++i;
