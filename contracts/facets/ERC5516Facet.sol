@@ -26,9 +26,6 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, ID
     
     using Address for address;
 
-    // Mapping from account to operator approvals
-    mapping(address => mapping(address => bool)) private _operatorApprovals;
-
     /**
      * @dev Sets base uri for tokens. Preferably "https://ipfs.io/ipfs/"
      */
@@ -322,7 +319,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, ID
         override
         returns (bool)
     {
-        return _operatorApprovals[account][operator];
+        return dataBool[__aa(account, operator, "operatorApprovals")];
     }
 
     // Mints (creates a token)
@@ -619,7 +616,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, ID
             unchecked {
                 ++i;
             }
-            
+
         }
 
         emit TokenClaimed(operator, account, actions, ids);
@@ -713,7 +710,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, ID
         bool approved
     ) internal virtual {
         require(owner != operator, "ERC1155: setting approval status for self");
-        _operatorApprovals[owner][operator] = approved;
+        dataBool[__aa(owner, operator, "operatorApprovals")] = approved;
         emit ApprovalForAll(owner, operator, approved);
     }
 
