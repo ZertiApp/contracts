@@ -22,7 +22,7 @@ import "../interfaces/IERC5516.sol";
 import "../base/EternalStorage.sol";
 
 
-contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, IDiamondFacet, EternalStorage {
+contract ERC5516Facet is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, IDiamondFacet, EternalStorage {
     
     using Address for address;
 
@@ -51,9 +51,6 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, ID
                 IERC1155.setApprovalForAll.selector,
                 IERC1155.isApprovedForAll.selector,
                 IERC1155.safeTransferFrom.selector,
-                IERC1155.safeBatchTransferFrom.selector,
-                IERC1155Receiver.onERC1155Received.selector,
-                IERC1155Receiver.onERC1155BatchReceived.selector,
                 IERC1155MetadataURI.uri.selector
             );
     }
