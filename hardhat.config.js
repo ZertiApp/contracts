@@ -28,7 +28,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.8",
+        version: "0.8.9",
         settings: {
           optimizer: {
             enabled: true,
@@ -51,5 +51,12 @@ module.exports = {
   },
   etherscan: {
     apiKey: ENV["POLYGONSCAN_API_KEY"],
+  },
+  networks: {
+    //add goerli
+    goerli: {
+      url: `https://eth-goerli.alchemyapi.io/v2/${ENV["ALCHEMY_API_KEY"]}`,
+      accounts: [ENV["TEST_ACCOUNT_PK"]],
+    },
   },
 };

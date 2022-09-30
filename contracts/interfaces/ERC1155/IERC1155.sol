@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.7.0) (token/ERC1155/IERC1155.sol)
+// OpenZeppelin Contracts v4.4.1 (token/ERC1155/IERC1155.sol)
 
 pragma solidity ^0.8.0;
 
-import "../../utils/introspection/IERC165.sol";
+import "../IERC165.sol";
 
 /**
  * @dev Required interface of an ERC1155 compliant contract, as defined in the
@@ -91,7 +91,7 @@ interface IERC1155 is IERC165 {
      * Requirements:
      *
      * - `to` cannot be the zero address.
-     * - If the caller is not `from`, it must have been approved to spend ``from``'s tokens via {setApprovalForAll}.
+     * - If the caller is not `from`, it must be have been approved to spend ``from``'s tokens via {setApprovalForAll}.
      * - `from` must have a balance of tokens of type `id` of at least `amount`.
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
      * acceptance magic value.
