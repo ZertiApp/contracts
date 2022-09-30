@@ -13,9 +13,6 @@ import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
 import { IERC173 } from "../interfaces/IERC173.sol";
 import { IERC165 } from "../interfaces/IERC165.sol";
-import { IERC5516 } from "../interfaces/IERC5516.sol";
-import { IERC1155 } from "../interfaces/ERC1155/IERC1155MetadataURI.sol";
-import { IERC1155Receiver } from "../interfaces/ERC1155/IERC1155Receiver.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -35,9 +32,6 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
-        ds.supportedInterfaces[type(IERC5516).interfaceId] = true;
-        ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
-        ds.supportedInterfaces[type(IERC1155Receiver).interfaceId] = true;
 
 
         // add your own state variables 
