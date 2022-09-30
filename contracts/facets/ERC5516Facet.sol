@@ -17,12 +17,11 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "../interfaces/IDiamondFacet.sol";
 import "../interfaces/IERC5516.sol";
 import "../base/EternalStorage.sol";
 
 
-contract ERC5516Facet is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, IDiamondFacet, EternalStorage {
+contract ERC5516Facet is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516, EternalStorage {
     
     using Address for address;
 
@@ -35,26 +34,7 @@ contract ERC5516Facet is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC551
         dataString["symbol"] = symbol_;
         dataString["contractUri"] = contractUri_;
     }
-
-    // IDiamondFacet
-    function getSelectors() public pure override returns (bytes memory) {
-        return
-            abi.encodePacked(
-                IERC5516.tokensFrom.selector,
-                IERC5516.pendingFrom.selector,
-                IERC5516.claimOrReject.selector,
-                IERC5516.claimOrRejectBatch.selector,
-                IERC5516.batchTransfer.selector,
-                IERC165.supportsInterface.selector,
-                IERC1155.balanceOf.selector,
-                IERC1155.balanceOfBatch.selector,
-                IERC1155.setApprovalForAll.selector,
-                IERC1155.isApprovedForAll.selector,
-                IERC1155.safeTransferFrom.selector,
-                IERC1155MetadataURI.uri.selector
-            );
-    }
-
+    
     /**
      * @dev See {IERC165-supportsInterface}.
      */
