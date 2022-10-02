@@ -210,6 +210,9 @@ const {
       assert.equal(await ERC5516DiamondFacet.balanceOf(addr1.address, 2), 1);
       assert.equal(await ERC5516DiamondFacet.balanceOf(addr2.address, 2), 0);
 
+      await ERC5516DiamondFacet.mint("BoquitaPasion")
+      assert.equal(await ERC5516DiamondFacet.uri(3), "https://ipfs.io/ipfs/BoquitaPasion");
+      
     })
 
     it('should add test2 functions', async () => {
