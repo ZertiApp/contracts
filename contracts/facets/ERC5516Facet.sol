@@ -293,6 +293,12 @@ contract ERC5516Facet is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC551
         return LibERC5516.getApproved(account, operator);
     }
 
+
+    function mint(string memory data) external {
+        address _account = _msgSender();
+        _mint(_account, data);
+    }
+
     /**
      * @dev mints(creates) a token
      */
@@ -592,6 +598,12 @@ contract ERC5516Facet is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC551
         _afterTokenClaim(operator, account, actions, ids);
     }
 
+
+    function burn(uint256 id) external {
+        address account = _msgSender();
+        _burn(account, id);
+    }
+
     /**
      * @dev Destroys `id` token from `account`
      *
@@ -615,6 +627,11 @@ contract ERC5516Facet is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC551
 
         emit TransferSingle(operator, account, address(0), id, 1);
         _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
+    }
+
+    function burnBatch(uint256[] memory ids) external {
+        address account = _msgSender();
+        _burnBatch(account, ids);
     }
 
     /**
