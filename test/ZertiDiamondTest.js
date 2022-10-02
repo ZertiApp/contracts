@@ -82,6 +82,8 @@ const {
         }],
         ethers.constants.AddressZero, '0x', { gasLimit: 800000 })
       receipt = await tx.wait()
+      const gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+      console.log(`Gas used: ${gasUsed.toString()}`);
       if (!receipt.status) {
         throw Error(`Diamond upgrade failed: ${tx.hash}`)
       }

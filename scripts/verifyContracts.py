@@ -10,13 +10,13 @@ Addresses = [
 ]
 
 for address in Addresses:
-    command = "npx hardhat verify --network goerli " + f'"{address}"'
+    command = f'npx hardhat verify --network goerli "{address}"'
     if address == "0x37124e367A4234A6971089e81E488Fc698EcaF8B":
         command += " --constructor-args scripts/arguments.js"
     print("Running command: " + command)
     process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
     output, error = process.communicate()
 
-    print("Output: " + output.decode("utf-8"))
+    print(output.decode("utf-8"))
     if(error != None):
         print("Error: " + error.decode("utf-8"))
