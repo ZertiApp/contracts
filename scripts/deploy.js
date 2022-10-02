@@ -37,6 +37,11 @@ async function deployDiamond () {
     })
   }
 
+  const ERC5516Facet = await ethers.getContractFactory('ERC5516Facet')
+  const erc5516Facet = await ERC5516Facet.deploy()
+  await erc5516Facet.deployed()
+  console.log('ERC5516Facet deployed:', erc5516Facet.address)
+
   // Creating a function call
   // This call gets executed during deployment and can also be executed in upgrades
   // It is executed with delegatecall on the DiamondInit address.
@@ -56,7 +61,6 @@ async function deployDiamond () {
   console.log()
   console.log('Diamond deployed:', diamond.address)
 
-  // returning the address of the diamond
   return diamond.address
 }
 

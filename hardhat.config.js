@@ -50,7 +50,7 @@ module.exports = {
     coinmarketcap: ENV["COINMARKETCAP_API_KEY"],
   },
   etherscan: {
-    apiKey: ENV["POLYGONSCAN_API_KEY"],
+    apiKey: ENV["ETHERSCAN_API_KEY"],
   },
   networks: {
     //add goerli
