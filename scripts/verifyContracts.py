@@ -1,7 +1,6 @@
 import subprocess
 
 deployedContracts = [
-    "0x418b9ea7ce06a68b28af897b292fb67a0404dec1", #AddSuportedInterfacesFacet
     "0x543ef797ecDa9E39AB2a4B95640e3eb46f1c27F4", #DiamondInit
     "0x55cdcadc6e819b4907a50a59dcc706b88ce31e49", #ERC5516Facet
     "0xb0c0d4893edcd40705f8db0b4ae120847646d48a", #DiamondCutFacet
@@ -11,7 +10,6 @@ deployedContracts = [
 ]
 
 AddressesToValidate = [
-    "0x418b9ea7ce06a68b28af897b292fb67a0404dec1"
 ]
 
 for address in AddressesToValidate:
