@@ -12,30 +12,38 @@ const { assert } = require('chai')
 
 async function main() {
     const diamondAddress = "0x667855326c5cb7C9Edaf897bC3f14E552fD84955"
-    const ERC5516FacetAddress = "0x55CdcADC6E819b4907a50A59DCC706b88ce31E49"
 
     const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress)
     const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', diamondAddress)
 
-    const ERC5516Facet  = await ethers.getContractAt('ERC5516Facet', ERC5516FacetAddress)
+    FacetName = "AddSupportedInterfacesFacet"
+    const Facet = await ethers.getContractFactory(FacetName)
+    const facet = await Facet.deploy()
+    await facet.deployed()
 
-    const selectors = getSelectors(ERC5516Facet).remove(['supportsInterface(bytes4)'])
+    const facetAddress = facet.address
+    console.log("Deployed facet:", facetAddress)
+    console.log("Deploy transaction hash:", facet.deployTransaction.hash) 
+
+    const selectors = getSelectors(facet)
 
     let signWallet = new ethers.Wallet(ENV["TEST_ACCOUNT_PK"], ethers.provider);
     
     tx = await diamondCutFacet.connect(signWallet).diamondCut(
     [{
-        facetAddress: ERC5516FacetAddress,
+        facetAddress: facetAddress,
         action: FacetCutAction.Add,
         functionSelectors: selectors
     }],
-    ethers.constants.AddressZero, '0x', { gasLimit: 30000000 })
+    ethers.constants.AddressZero, '0x', { gasLimit: 30000000, gasPrice: 1000})
     receipt = await tx.wait()
     if (!receipt.status) {
         throw Error(`Diamond upgrade failed: ${tx.hash}`)
+    } else {
+        console.log("Diamond upgrade successful:", tx.hash)
     }
-    result = await diamondLoupeFacet.facetFunctionSelectors(ERC5516FacetAddress)
-    //assert.sameMembers(result, selectors)
+    result = await diamondLoupeFacet.facetFunctionSelectors(facetAddress)
+    assert.sameMembers(result, selectors)
 }
 
 // We recommend this pattern to be able to use async/await everywhere
