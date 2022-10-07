@@ -8,32 +8,24 @@
 
 pragma solidity >=0.8.9;
 
+import { LibSubscriptionStructs } from "./LibSubscriptionStructs.sol";
+
 library LibSubscription {
     bytes32 internal constant SUBSCRIPTION_STORAGE_POSITION =
         keccak256("subscription.facet.storage");
 
-    struct Plan {
-        uint256 id;
-        string name;
-        uint256 cost;
-        uint256 duration;
-    }
-
-    struct Subscription {
-        uint256 planId;
-        uint256 startTime;
-        uint256 endTime;
-    }
-
-    event PlanUpdated(Plan, uint256 indexed id, bool action);
-    event UserSubscription(address indexed account, Subscription);
+    event PlanUpdated(LibSubscriptionStructs.Plan, uint256 indexed id, bool action);
+    event UserSubscription(address indexed account, LibSubscriptionStructs.Subscription);
 
     struct SubscriptionStorage {
         uint256 nonce;
-        mapping(uint256 => Plan) plans;
-        mapping(address => Subscription) subscriptions;
+        mapping(uint256 => LibSubscriptionStructs.Plan) plans;
+        mapping(address => LibSubscriptionStructs.Subscription) subscriptions;
     }
 
+    /**
+     * @dev Returns the SubscriptionStorage struct.
+     */
     function diamondStorage()
         internal
         pure
@@ -45,42 +37,57 @@ library LibSubscription {
         }
     }
 
-    function getPlan(uint256 id) external view returns (Plan memory) {
+    /**
+     * @dev see {ISubscription-getPlan}
+     */
+    function getPlan(uint256 id) internal view returns (LibSubscriptionStructs.Plan memory) {
         SubscriptionStorage storage ds = diamondStorage();
         return ds.plans[id];
     }
 
+    /**
+     * @dev see {ISubscription-getSubscription}
+     */
     function getSubcription(address account)
-        external
+        internal
         view
-        returns (Subscription memory)
+        returns (LibSubscriptionStructs.Subscription memory)
     {
         SubscriptionStorage storage ds = diamondStorage();
         return ds.subscriptions[account];
     }
 
+    /**
+     * @dev see {ISubscription-createPlan}
+     */
     function createPlan(
         string memory name,
         uint256 cost,
         uint256 duration
-    ) external {
+    ) internal {
         SubscriptionStorage storage ds = diamondStorage();
-        Plan memory newPlan = Plan(ds.nonce, name, cost, duration);
+        LibSubscriptionStructs.Plan memory newPlan = LibSubscriptionStructs.Plan(ds.nonce, name, cost, duration * 1 days);
         ds.plans[ds.nonce] = newPlan;
         emit PlanUpdated(newPlan, ds.nonce, true);
         ds.nonce++;
     }
 
-    function deletePlan(uint256 id) external {
+    /**
+     * @dev see {ISubscription-deletePlan}
+     */
+    function deletePlan(uint256 id) internal {
         SubscriptionStorage storage ds = diamondStorage();
         emit PlanUpdated(ds.plans[id], id, false);
         delete ds.plans[id];
     }
 
-    function subscribe (uint256 id) external {
+    /**
+     * @dev see {ISubscription-subscribe}
+     */
+    function subscribe (uint256 id) internal {
         SubscriptionStorage storage ds = diamondStorage();
-        Plan memory plan = ds.plans[id];
-        Subscription memory userSubscription = Subscription(
+        LibSubscriptionStructs.Plan memory plan = ds.plans[id];
+        LibSubscriptionStructs.Subscription memory userSubscription = LibSubscriptionStructs.Subscription(
             plan.id,
             block.timestamp,
             block.timestamp + plan.duration
