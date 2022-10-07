@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../interfaces/ERC20/IERC20.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSubscription } from  "../libraries/LibSubscription.sol";
 
