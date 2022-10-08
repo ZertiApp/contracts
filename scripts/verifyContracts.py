@@ -9,7 +9,7 @@ for address in AddressesToValidate:
     """ if address == "0x667855326c5cb7C9Edaf897bC3f14E552fD84955":
         command += " --constructor-args scripts/constructor_args/arguments.js" """
 
-    print("Running command: " + command)
+    print("Running: " + command)
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
     output, error = process.communicate()

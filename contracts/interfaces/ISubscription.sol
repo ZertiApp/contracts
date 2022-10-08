@@ -54,4 +54,9 @@ interface ISubscription {
      */
     function deletePlan(uint256 id) external ;
 
+    /**
+     * @dev admin function that retrieves the funds from the contract
+     */
+    function retrieveFunds() external;
+
 }

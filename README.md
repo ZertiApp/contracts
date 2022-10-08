@@ -7,7 +7,7 @@
 
 ### Facets:
 * __ERC5516Facet:__ 0x55cdcadc6e819b4907a50a59dcc706b88ce31e49
-* __SubscriptionFacet:__ 0x15AF4e9969C3aeC57c9A4726889c1b67671951eD  
+* __SubscriptionFacet:__ 0xec614af7489004389ac01f48f6e9dafc04cd2b35  
 * __DiamondCutFacet:__ 0xb0c0d4893edcd40705f8db0b4ae120847646d48a  
 * __DiamondLoupeFacet:__ 0x09bf1a98499baa435802784542efdc21423db774  
 * __OwnershipFacet:__ 0x4d92e367e72ba9eD2a5201E15bcf8BF505dD4348
