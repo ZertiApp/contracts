@@ -15,7 +15,7 @@ for address in AddressesToValidate:
     output, error = process.communicate()
 
     print(output.decode("utf-8"))
-    if error != None:
+    if error is not None:
         print("Error: " + error.decode("utf-8"))
 
     sys.stdout.flush()
