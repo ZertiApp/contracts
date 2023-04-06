@@ -14,10 +14,8 @@ async function deployDiamond() {
 	const diamondInit = await DiamondInit.deploy()
 	await diamondInit.deployed()
 	console.log('DiamondInit deployed:', diamondInit.address)
-
 	// Deploy facets and set the `facetCuts` variable
-	console.log('')
-	console.log('Deploying facets')
+	console.log('\nDeploying facets')
 	const FacetNames = [
 		'DiamondCutFacet',
 		'DiamondLoupeFacet',
@@ -40,7 +38,7 @@ async function deployDiamond() {
 	const ERC5516Facet = await ethers.getContractFactory('ERC5516Facet')
 	const erc5516Facet = await ERC5516Facet.deploy()
 	await erc5516Facet.deployed()
-	console.log('ERC5516Facet deployed:', erc5516Facet.address)
+	console.log(`ERC5516Facet deployed: ${erc5516Facet.address}`)
 
 	// Creating a function call
 	// This call gets executed during deployment and can also be executed in upgrades
