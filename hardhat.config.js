@@ -1,22 +1,18 @@
-const { config } = require("dotenv");
-
 require("dotenv").config();
-require("hardhat-docgen");
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
+require("@primitivefi/hardhat-dodoc");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
-const { ENV } = require("./config");
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-	const accounts = await hre.ethers.getSigners();
-
-	for (const account of accounts) {
-		console.log(account.address);
-	}
-});
+const {
+	MAIN_ACCOUNT_PK,
+	TEST_ACCOUNT_PK,
+	ALCHEMY_API_KEY,
+	ALCHEMY_POLYGON_API_KEY,
+	POLYGONSCAN_API_KEY,
+	COINMARKETCAP_API_KEY,
+} = process.env;
 
 task("flat", "Flattens and prints contracts and their dependencies (Resolves licenses)")
 	.addOptionalVariadicPositionalParam("files", "The files to flatten", undefined, types.inputFile)
@@ -32,13 +28,8 @@ task("flat", "Flattens and prints contracts and their dependencies (Resolves lic
 		console.log(flattened);
 	});
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+const accountPK = MAIN_ACCOUNT_PK !== "" ? MAIN_ACCOUNT_PK : TEST_ACCOUNT_PK;
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-const accountPK = ENV["MAIN_ACCOUNT_PK"] !== "" ? ENV["MAIN_ACCOUNT_PK"] : ENV["TEST_ACCOUNT_PK"];
 module.exports = {
 	solidity: {
 		compilers: [
@@ -62,19 +53,17 @@ module.exports = {
 		noColors:true, */
 		gasPriceApi:
 			"https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
-		coinmarketcap: ENV["COINMARKETCAP_API_KEY"],
+		coinmarketcap: COINMARKETCAP_API_KEY,
 	},
 	etherscan: {
-		apiKey: ENV["POLYGONSCAN_API_KEY"],
+		apiKey: POLYGONSCAN_API_KEY,
 	},
 	networks: {
 		goerli: {
-			url: `https://eth-goerli.alchemyapi.io/v2/${ENV["ALCHEMY_API_KEY"]}`,
-			accounts: [accountPK],
+			url: `https://eth-goerli.alchemyapi.io/v2/${ALCHEMY_API_KEY}`,
 		},
 		polygon: {
-			url: `https://polygon-mainnet.g.alchemy.com/v2/${ENV["ALCHEMY_POLYGON_API_KEY"]}`,
-			accounts: [accountPK],
+			url: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_POLYGON_API_KEY}`,
 		},
 	},
 };

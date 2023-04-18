@@ -1,7 +1,30 @@
 {
-  "extends": "solhint:recommended",
-  "rules": {
-    "compiler-version": ["error", "^0.8.0"],
-    "func-visibility": ["warn", { "ignoreConstructors": true }]
-  }
+	"extends": "solhint:recommended",
+	"plugins": [
+		"prettier"
+	],
+	"rules": {
+		"prettier/prettier": "error",
+		"avoid-throw": "warn",
+		"avoid-suicide": "error",
+		"avoid-sha3": "warn",
+		"compiler-version": [
+			"warn",
+			"^0.8.9"
+		],
+		"not-rely-on-time": "off",
+		"reason-string": [
+			"error",
+			{
+				"maxLength": 35
+			}
+		],
+		"func-visibility": [
+			"warn",
+			{
+				"ignoreConstructors": true
+			}
+		],
+		"no-global-import": "off"
+	}
 }
