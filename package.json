@@ -4,7 +4,8 @@
 		"compile": "npx hardhat compile",
 		"doc": "npx hardhat dodoc",
 		"format": "prettier --write contracts/**/*.sol",
-		"solhint": "solhint -f table contracts/**/*.sol"
+		"solhint": "solhint -f table contracts/**/*.sol",
+		"test": "npx hardhat test"
 	},
 	"author": {
 		"name": "Lucas Grasso Ramos",

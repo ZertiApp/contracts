@@ -7,12 +7,32 @@ import "./interfaces/ICircuitValidator.sol";
 import "./verifiers/ZKPVerifier.sol";
 
 contract ERC5516Verifier is ERC5516, ZKPVerifier {
-	uint64 public constant TRANSFER_REQUEST_ID = 1;
+	/**
+	 * @dev Modifier to make a function callable only by the minter of the token under `id`.
+	 * @param _id uint256 ID of the token to be minted.
+	 */
+	modifier onlyMinter(uint256 _id) {
+		require(_msgSender() == LibERC5516.getTokenMinter(_id), "Unauthorized");
+		_;
+	}
+
+	/** @dev Mapping that stores the tokenId for each requestId. If `requestId` is 0 for token under `id`, it means that the token can not be obtained via ZKP.
+	 */
+	mapping(uint256 => uint64) public tokenIdsToRequestIds;
+
+	/** @dev Mapping that stores the request id for each token id. If `requestId` is 0 for token under `id`, it means that the token can not be obtained via ZKP.
+	 */
+	mapping(uint64 => uint256) public requestIdsToTokenIds;
+	uint64 internal transferRequestId = 1;
+
+	function setTransferRequestId(uint256 _id) public onlyMinter(_id) {
+		require(tokenIdsToRequestIds[_id] == 0, "Token under id already has a request id");
+		tokenIdsToRequestIds[_id] = transferRequestId;
+		transferRequestId++;
+	}
 
 	mapping(uint256 => address) public idToAddress;
 	mapping(address => uint256) public addressToId;
-
-	uint256 public TOKEN_AMOUNT_FOR_AIRDROP_PER_ID = 1;
 
 	function _beforeProofSubmit(
 		uint64 /* requestId */,
@@ -31,7 +51,8 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 		ICircuitValidator validator
 	) internal override {
 		require(
-			requestId == TRANSFER_REQUEST_ID && addressToId[_msgSender()] == 0,
+			tokenIdsToRequestIds[requestIdsToTokenIds[requestId]] == requestId &&
+				addressToId[_msgSender()] == 0,
 			"proof can not be submitted more than once"
 		);
 
@@ -39,7 +60,7 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 		uint256 id = inputs[validator.getChallengeInputIndex()];
 		// additional check didn't get airdrop tokens before
 		if (idToAddress[id] == address(0)) {
-			super._safeTransferFrom(address(this), _msgSender(), id, 1, "0x00");
+			super._safeTransferFrom(address(this), _msgSender(), requestId, 1, "0x00");
 			addressToId[_msgSender()] = id;
 			idToAddress[id] = _msgSender();
 		}
@@ -49,31 +70,43 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 		address /* operator */,
 		address /* from */,
 		address to,
-		uint256[] memory /* ids */,
+		uint256[] memory ids,
 		uint256[] memory /* amounts */,
 		bytes memory /* data */
 	) internal view override {
-		require(
-			proofs[to][TRANSFER_REQUEST_ID] == true,
-			"only identities who provided proof are allowed to receive tokens"
-		);
+		for (uint256 i = 0; i < ids.length; ) {
+			uint256 id = ids[i];
+			uint64 requestId = tokenIdsToRequestIds[id];
+			if (requestIdsToTokenIds[requestId] == id) {
+				require(
+					proofs[to][requestId] == true,
+					"only identities who provided proof are allowed to receive tokens"
+				);
+			}
+			unchecked {
+				++i;
+			}
+		}
 	}
 
 	function _beforeBatchedTokenTransfer(
 		address /* operator */,
 		address /* from */,
 		address[] memory to,
-		uint256 /* id */,
+		uint256 id,
 		bytes memory /* data */
 	) internal virtual override {
-		for (uint256 i = 0; i < to.length; ) {
-			address _to = to[i];
-			require(
-				proofs[_to][TRANSFER_REQUEST_ID] == true,
-				"only identities who provided proof are allowed to receive tokens"
-			);
-			unchecked {
-				++i;
+		uint64 requestId = tokenIdsToRequestIds[id];
+		if (requestIdsToTokenIds[requestId] == id) {
+			for (uint256 i = 0; i < to.length; ) {
+				address _to = to[i];
+				require(
+					proofs[_to][requestId] == true,
+					"only identities who provided proof are allowed to receive tokens"
+				);
+				unchecked {
+					++i;
+				}
 			}
 		}
 	}

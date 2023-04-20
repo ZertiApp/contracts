@@ -10,40 +10,6 @@
 
 ## Methods
 
-### TOKEN_AMOUNT_FOR_AIRDROP_PER_ID
-
-```solidity
-function TOKEN_AMOUNT_FOR_AIRDROP_PER_ID() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### TRANSFER_REQUEST_ID
-
-```solidity
-function TRANSFER_REQUEST_ID() external view returns (uint64)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint64 | undefined |
-
 ### addressToId
 
 ```solidity
@@ -429,6 +395,28 @@ function renounceOwnership() external nonpayable
 *Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
 
 
+### requestIdsToTokenIds
+
+```solidity
+function requestIdsToTokenIds(uint64) external view returns (uint256)
+```
+
+
+
+*Mapping that stores the request id for each token id. If `requestId` is 0 for token under `id`, it means that the token can not be obtained via ZKP.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint64 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### requestQueries
 
 ```solidity
@@ -533,6 +521,22 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 |---|---|---|
 | operator | address | undefined |
 | approved | bool | undefined |
+
+### setTransferRequestId
+
+```solidity
+function setTransferRequestId(uint256 _id) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _id | uint256 | undefined |
 
 ### setZKPRequest
 
@@ -653,6 +657,28 @@ function symbol() external view returns (string)
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
+
+### tokenIdsToRequestIds
+
+```solidity
+function tokenIdsToRequestIds(uint256) external view returns (uint64)
+```
+
+
+
+*Mapping that stores the tokenId for each requestId. If `requestId` is 0 for token under `id`, it means that the token can not be obtained via ZKP.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint64 | undefined |
 
 ### tokensFrom
 
