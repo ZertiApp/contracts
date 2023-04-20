@@ -25,6 +25,13 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 	mapping(uint64 => uint256) public requestIdsToTokenIds;
 	uint64 internal transferRequestId = 1;
 
+	/**
+	 * @dev Sets the request id for the token under `id`. Makes the token under `id` available for transfer via ZKP.
+	 * @param _id uint256 ID of the token to be set for ZKP.
+	 *
+	 * Requirements:
+	 *  - Caller must have minted the token under `id`.
+	 */
 	function setTransferRequestId(uint256 _id) public onlyMinter(_id) {
 		require(tokenIdsToRequestIds[_id] == 0, "Token under id already has a request id");
 		tokenIdsToRequestIds[_id] = transferRequestId;
