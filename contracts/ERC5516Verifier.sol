@@ -67,7 +67,7 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 		uint256 id = inputs[validator.getChallengeInputIndex()];
 		// additional check didn't get airdrop tokens before
 		if (idToAddress[id] == address(0)) {
-			super._safeTransferFrom(address(this), _msgSender(), requestId, 1, "0x00");
+			super._safeTransferFrom(address(this), _msgSender(), requestIdsToTokenIds[requestId], 1, "0x00");
 			addressToId[_msgSender()] = id;
 			idToAddress[id] = _msgSender();
 		}
