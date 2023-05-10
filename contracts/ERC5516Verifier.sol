@@ -72,18 +72,25 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 	}
 
 	/**
-	 * @dev Asserts that
+	 * @dev Asserts that _msgSender() has provided proof for the token under `id` and transfers the token to _msgSender().
 	 */
 	function assertProofSubmitted(uint256 id, uint64 requestId) external {
+		// If request id is 0, it means that the token can not be obtained via ZKP.
 		require(requestId != 0, "ERC5516Verifier: Request id can not be 0");
+		// Require that the token under `id` has been set for ZKP with the same `requestId`.
 		require(
 			tokenIdsToRequestIds[id] == requestId,
 			"ERC5516Verifier: Token under id is not set for this request id"
 		);
+		// Require that _msgSender() has provided proof for the token under `id`.
 		require(
 			proofs[_msgSender()][requestId] == true,
 			"ERC5516Verifier: Proof was not submitted"
 		);
+		/**
+		 * here we are using _safeTransferFrom from ERC5516, but can be replaced with any other function or action
+		 * to be executed after proof is submitted.
+		 */
 		super._safeTransferFrom(
 			LibERC5516.getTokenMinter(id),
 			_msgSender(),
