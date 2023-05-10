@@ -32,6 +32,23 @@ function addressToId(address) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### assertProofSubmitted
+
+```solidity
+function assertProofSubmitted(uint256 id, uint64 requestId) external nonpayable
+```
+
+
+
+*Asserts that*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id | uint256 | undefined |
+| requestId | uint64 | undefined |
+
 ### balanceOf
 
 ```solidity
@@ -395,28 +412,6 @@ function renounceOwnership() external nonpayable
 *Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
 
 
-### requestIdsToTokenIds
-
-```solidity
-function requestIdsToTokenIds(uint64) external view returns (uint256)
-```
-
-
-
-*Mapping that stores the request id for each token id. If `requestId` is 0 for token under `id`, it means that the token can not be obtained via ZKP.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint64 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### requestQueries
 
 ```solidity
@@ -525,18 +520,19 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 ### setTransferRequestId
 
 ```solidity
-function setTransferRequestId(uint256 _id) external nonpayable
+function setTransferRequestId(uint256 _id, uint64 _requestId) external nonpayable
 ```
 
 
 
-
+*Sets the request id for the token under `id`. Makes the token under `id` available for transfer via ZKP.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _id | uint256 | undefined |
+| _id | uint256 | uint256 ID of the token to be set for ZKP. Requirements:  - Caller must have minted the token under `id`. |
+| _requestId | uint64 | undefined |
 
 ### setZKPRequest
 
@@ -896,6 +892,23 @@ event URI(string value, uint256 indexed id)
 |---|---|---|
 | value  | string | undefined |
 | id `indexed` | uint256 | undefined |
+
+### ZKPRequestAdded
+
+```solidity
+event ZKPRequestAdded(uint64 indexed requestId, uint256 indexed tokenId)
+```
+
+Event emitted when a token is set for ZKP.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| requestId `indexed` | uint64 | id of the ZKP. request |
+| tokenId `indexed` | uint256 | id of the token that was set for ZKP. |
 
 
 
