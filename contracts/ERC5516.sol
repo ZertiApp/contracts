@@ -13,12 +13,14 @@ pragma solidity >=0.8.9;
 import "./base/ERC165.sol";
 import "./interfaces/ERC1155/IERC1155MetadataURI.sol";
 import "./interfaces/ERC1155/IERC1155Receiver.sol";
+import "./utils/math/Uint256.sol";
 import "./utils/Address.sol";
 import "./utils/Context.sol";
 import "./interfaces/IERC5516.sol";
 import {LibERC5516} from "./libraries/LibERC5516.sol";
 
 contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
+	using Uint256 for uint256;
 	using Address for address;
 
 	string internal constant IPFSURI = "https://ipfs.io/ipfs/";
@@ -59,7 +61,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	 *
 	 */
 	function balanceOf(address account, uint256 id) public view override returns (uint256) {
-		require(account != address(0), "EIP5516: Address zero error");
+		require(account != address(0), "ERC5516: Address zero error");
 		if (LibERC5516.getBalance(account, id)) {
 			return 1;
 		} else {
@@ -79,7 +81,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		address[] memory accounts,
 		uint256[] memory ids
 	) public view override returns (uint256[] memory) {
-		require(accounts.length == ids.length, "EIP5516: Array lengths mismatch");
+		require(accounts.length == ids.length, "ERC5516: Array lengths mismatch");
 
 		uint256[] memory batchBalances = new uint256[](accounts.length);
 
@@ -99,7 +101,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	 *
 	 */
 	function tokensFrom(address account) public view override returns (uint256[] memory) {
-		require(account != address(0), "EIP5516: Address zero error");
+		require(account != address(0), "ERC5516: Address zero error");
 
 		uint256 nonce = LibERC5516.getNonce();
 
@@ -139,7 +141,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	 *
 	 */
 	function pendingFrom(address account) public view override returns (uint256[] memory) {
-		require(account != address(0), "EIP5516: Address zero error");
+		require(account != address(0), "ERC5516: Address zero error");
 
 		uint256 nonce = LibERC5516.getNonce();
 
@@ -177,7 +179,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	 *
 	 */
 	function tokensURIFrom(address account) external view returns (string[] memory) {
-		require(account != address(0), "EIP5516: Address zero error");
+		require(account != address(0), "ERC5516: Address zero error");
 
 		uint256[] memory ownedTokens = tokensFrom(account);
 		uint256 _nTokens = ownedTokens.length;
@@ -204,7 +206,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	 *
 	 */
 	function pendingURIFrom(address account) external view returns (string[] memory) {
-		require(account != address(0), "EIP5516: Address zero error");
+		require(account != address(0), "ERC5516: Address zero error");
 
 		uint256[] memory pendingTokens = pendingFrom(account);
 		uint256 _nTokens = pendingTokens.length;
@@ -253,8 +255,8 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		uint256 nonce = LibERC5516.getNonce();
 
 		address operator = _msgSender();
-		uint256[] memory ids = _asSingletonArray(nonce);
-		uint256[] memory amounts = _asSingletonArray(1);
+		uint256[] memory ids = nonce._asSingletonArray();
+		uint256[] memory amounts = uint256(1)._asSingletonArray();
 		bytes memory _bData = bytes(data);
 
 		_beforeTokenTransfer(operator, address(0), operator, ids, amounts, _bData);
@@ -279,11 +281,10 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		uint256 amount,
 		bytes memory data
 	) public override {
-		require(amount == 1, "EIP5516: Can only transfer one token");
 		require(
 			_msgSender() == LibERC5516.getTokenMinter(id) ||
 				isApprovedForAll(LibERC5516.getTokenMinter(id), _msgSender()),
-			"EIP5516: Unauthorized"
+			"ERC5516: Unauthorized"
 		);
 
 		_safeTransferFrom(from, to, id, amount, data);
@@ -304,11 +305,11 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		uint256 amount,
 		bytes memory data
 	) external override {
-		require(amount == 1, "EIP5516: Can only transfer one token");
+		require(amount == 1, "ERC5516: Can only transfer one token");
 		require(
 			_msgSender() == LibERC5516.getTokenMinter(id) ||
 				isApprovedForAll(LibERC5516.getTokenMinter(id), _msgSender()),
-			"EIP5516: Unauthorized"
+			"ERC5516: Unauthorized"
 		);
 
 		_batchTransfer(from, to, id, amount, data);
@@ -336,16 +337,16 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		uint256 amount,
 		bytes memory data
 	) internal {
-		require(from != address(0), "EIP5516: Address zero error");
+		require(from != address(0), "ERC5516: Address zero error");
 		require(
 			LibERC5516.getPending(to, id) == false && LibERC5516.getBalance(to, id) == false,
-			"EIP5516: Already Assignee"
+			"ERC5516: Already Assignee"
 		);
 
 		address operator = _msgSender();
 
-		uint256[] memory ids = _asSingletonArray(id);
-		uint256[] memory amounts = _asSingletonArray(amount);
+		uint256[] memory ids = id._asSingletonArray();
+		uint256[] memory amounts = amount._asSingletonArray();
 
 		_beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
@@ -373,15 +374,15 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	) internal {
 		address operator = _msgSender();
 
-		_beforeBatchedTokenTransfer(operator, from, to, id, data);
+		_beforeBatchedTokenTransfer(operator, from, to, id, amount, data);
 
 		for (uint256 i = 0; i < to.length; ) {
 			address _to = to[i];
 
-			require(_to != address(0), "EIP5516: Address zero error");
+			require(_to != address(0), "ERC5516: Address zero error");
 			require(
 				LibERC5516.getPending(_to, id) == false && LibERC5516.getBalance(_to, id) == false,
-				"EIP5516: Already Assignee"
+				"ERC5516: Already Assignee"
 			);
 
 			LibERC5516.setPending(_to, id, true);
@@ -393,7 +394,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 
 		emit TransferMulti(operator, from, to, amount, id);
 
-		_beforeBatchedTokenTransfer(operator, from, to, id, data);
+		_beforeBatchedTokenTransfer(operator, from, to, id, amount, data);
 	}
 
 	/**
@@ -404,7 +405,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	 *
 	 */
 	function claimOrReject(address account, uint256 id, bool action) external override {
-		require(_msgSender() == account, "EIP5516: Unauthorized");
+		require(_msgSender() == account, "ERC5516: Unauthorized");
 
 		_claimOrReject(account, id, action);
 	}
@@ -423,9 +424,9 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		uint256[] memory ids,
 		bool[] memory actions
 	) external override {
-		require(ids.length == actions.length, "EIP5516: Array lengths mismatch");
+		require(ids.length == actions.length, "ERC5516: Array lengths mismatch");
 
-		require(_msgSender() == account, "EIP5516: Unauthorized");
+		require(_msgSender() == account, "ERC5516: Unauthorized");
 
 		_claimOrRejectBatch(account, ids, actions);
 	}
@@ -446,14 +447,14 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		require(
 			LibERC5516.getPending(account, id) == true &&
 				LibERC5516.getBalance(account, id) == false,
-			"EIP5516: Not claimable"
+			"ERC5516: Not claimable"
 		);
 
 		address operator = _msgSender();
 
 		bool[] memory actions = new bool[](1);
 		actions[0] = action;
-		uint256[] memory ids = _asSingletonArray(id);
+		uint256[] memory ids = id._asSingletonArray();
 
 		_beforeTokenClaim(operator, account, actions, ids);
 
@@ -498,7 +499,7 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 			require(
 				LibERC5516.getPending(account, id) == true &&
 					LibERC5516.getBalance(account, id) == false,
-				"EIP5516: Not claimable"
+				"ERC5516: Not claimable"
 			);
 
 			if (actions[i]) {
@@ -534,11 +535,11 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	 *
 	 */
 	function _burn(address account, uint256 id) internal {
-		require(LibERC5516.getBalance(account, id) == true, "EIP5516: Unauthorized");
+		require(LibERC5516.getBalance(account, id) == true, "ERC5516: Unauthorized");
 
 		address operator = _msgSender();
-		uint256[] memory ids = _asSingletonArray(id);
-		uint256[] memory amounts = _asSingletonArray(1);
+		uint256[] memory ids = id._asSingletonArray();
+		uint256[] memory amounts = uint256(1)._asSingletonArray();
 
 		_beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
 
@@ -566,15 +567,15 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 	function _burnBatch(address account, uint256[] memory ids) internal {
 		uint256 totalIds = ids.length;
 		address operator = _msgSender();
-		uint256[] memory amounts = _asSingletonArray(totalIds);
-		uint256[] memory values = _asSingletonArray(0);
+		uint256[] memory amounts = totalIds._asSingletonArray();
+		uint256[] memory values = uint256(0)._asSingletonArray();
 
 		_beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
 
 		for (uint256 i = 0; i < totalIds; ) {
 			uint256 id = ids[i];
 
-			require(LibERC5516.getBalance(account, id) == true, "EIP5516: Unauthorized");
+			require(LibERC5516.getBalance(account, id) == true, "ERC5516: Unauthorized");
 
 			LibERC5516.setBalance(account, id, false);
 
@@ -627,7 +628,9 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		uint256[] memory ids,
 		uint256[] memory amounts,
 		bytes memory data
-	) internal virtual {}
+	) internal virtual {
+		require(amounts.length == 1, "ERC5516: Can only transfer one token");
+	}
 
 	/**
 	 * @dev Hook that is called after any token transfer. This includes minting
@@ -683,8 +686,11 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		address from,
 		address[] memory to,
 		uint256 id,
+		uint256 amount,
 		bytes memory data
-	) internal virtual {}
+	) internal virtual {
+		require(amount == 1, "ERC5516: Can only transfer one token");
+	}
 
 	/**
 	 * @dev Hook that is called after any batched token transfer. This includes minting
@@ -747,13 +753,6 @@ contract ERC5516 is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC5516 {
 		bool[] memory actions,
 		uint256[] memory ids
 	) internal virtual {}
-
-	function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
-		uint256[] memory array = new uint256[](1);
-		array[0] = element;
-
-		return array;
-	}
 
 	/**
 	 * @dev see {ERC1155-_doSafeTransferAcceptanceCheck, IERC1155Receivable}
