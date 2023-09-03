@@ -57,9 +57,9 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 		uint256[] memory inputs,
 		ICircuitValidator validator
 	) internal view override {
-		// check that  challenge input is address of sender
+		// check that  challenge input is address of sender.
 		address addr = GenesisUtils.int256ToAddress(inputs[validator.getChallengeInputIndex()]);
-		// this is linking between msg.sender and address in proof
+		// this is linking between msg.sender and address in proof.
 		require(_msgSender() == addr, "address in proof is not a sender address");
 	}
 
@@ -76,7 +76,7 @@ contract ERC5516Verifier is ERC5516, ZKPVerifier {
 	 */
 	function assertProofSubmitted(uint256 id, uint64 requestId) external {
 		// If request id is 0, it means that the token can not be obtained via ZKP.
-		require(requestId != 0, "ERC5516Verifier: Request id can not be 0");
+		require(requestId != 0, "ERC5516Verifier: RequestId can not be 0");
 		// Require that the token under `id` has been set for ZKP with the same `requestId`.
 		require(
 			tokenIdsToRequestIds[id] == requestId,
